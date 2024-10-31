@@ -8,9 +8,9 @@ const portBaudRate = {};
 portBaudRate[tinySAUltra.usbProductId] = 115200;
 
 const textEncoder = new TextEncoder();
-const textDecoder = new TextDecoder();
 
-const bufferSize = 8 * 1024; // 8kB
+const respOpening = 123;
+const respClosing = 125;
 
 let port, reader;
 
@@ -20,45 +20,45 @@ function App() {
   const filters = [tinySAUltra];
 
   const processResponse = (response) => {
-    console.log(response)
+    console.log("RESPONSE");
+    console.log(response);
   }
+
+  let responseBuffer = new Int8Array([]);
 
   const readLoop = async () => {
     // let reader;
     while (port && port.readable) {
-      console.log(port)
       try {
-        try {
-          reader = port.readable.getReader({mode: 'byob'});
-        } catch {
-          reader = port.readable.getReader();
-        }
-  
-        let buffer = null;
+        reader = port.readable.getReader();
+
         for (;;) {
           console.log("inner")
-          const {value, done} = await (async () => {
-            if (reader instanceof ReadableStreamBYOBReader) {
-              if (!buffer) {
-                buffer = new ArrayBuffer(bufferSize);
-              }
-              const {value, done} =
-                  await reader.read(new Uint8Array(buffer, 0, bufferSize));
-              buffer = value?.buffer;
-              return {value, done};
-            } else {
-              return await reader.read();
-            }
-          })();
+          // we don't pass own buffer as we need to keep buffers to find response
+          const {value, done} = await reader.read();
   
           if (value) {
-            console.log(textDecoder.decode(value));
+            responseBuffer = new Uint8Array([ ...responseBuffer, ...value ]);
+
+            const closingBracketIdx = responseBuffer.findIndex(
+              (element) => element === respClosing // checking if closing of a response is detected
+            );
+            if(closingBracketIdx > -1) {
+              const openingBracketIdx = responseBuffer.findIndex(
+                (element) => element === respOpening // checking placement of opening bracket
+              );
+
+              processResponse(responseBuffer.slice(openingBracketIdx+1, closingBracketIdx));
+              responseBuffer = new Int8Array([]);
+            }
+
           }
           if (done) {
             break;
           }
         }
       } catch (e) {
+        debugger;
         console.error(e);
       } finally {
         if (reader) {
@@ -75,7 +75,6 @@ function App() {
     "parity": "none",
     "stopBits": 1,
     "flowControl": "none",
-    "bufferSize": 8192,
     "baudrate": 115200,
     "databits": 8,
     "stopbits": 1,
