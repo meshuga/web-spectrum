@@ -10,18 +10,40 @@ portBaudRate[tinySAUltra.usbProductId] = 115200;
 const textEncoder = new TextEncoder();
 
 const respOpening = 123;
-const respClosing = 125;
+const respClosing = new TextEncoder().encode("}ch>");
 
 let port, reader;
 
+// eslint-disable-next-line no-extend-native
+Uint8Array.prototype.indexOfMulti = function(searchElements, fromIndex) {
+  fromIndex = fromIndex || 0;
+
+  var index = Array.prototype.indexOf.call(this, searchElements[0], fromIndex);
+  if(searchElements.length === 1 || index === -1) {
+      // Not found or no other elements to check
+      return index;
+  }
+
+  for(var i = index, j = 0; j < searchElements.length && i < this.length; i++, j++) {
+      if(this[i] !== searchElements[j]) {
+          return this.indexOfMulti(searchElements, index + 1);
+      }
+  }
+
+  return(i === index + searchElements.length) ? index : -1;
+};
+
 function App() {
   const [portState, setPort] = useState(undefined);
+  const [startFrequency, setStartFrequency] = useState(0);
+  const [stopFrequency, setStopFrequency] = useState(100000000);
+  const [points, setPoints] = useState(100);
 
   const filters = [tinySAUltra];
 
   const processResponse = (response) => {
     console.log("RESPONSE");
-    console.log(response);
+    console.log(new TextDecoder().decode(response));
   }
 
   let responseBuffer = new Int8Array([]);
@@ -29,20 +51,20 @@ function App() {
   const readLoop = async () => {
     // let reader;
     while (port && port.readable) {
+      console.log("readable");
       try {
         reader = port.readable.getReader();
-
         for (;;) {
-          console.log("inner")
+          // console.log("innner");
+
           // we don't pass own buffer as we need to keep buffers to find response
           const {value, done} = await reader.read();
   
           if (value) {
             responseBuffer = new Uint8Array([ ...responseBuffer, ...value ]);
 
-            const closingBracketIdx = responseBuffer.findIndex(
-              (element) => element === respClosing // checking if closing of a response is detected
-            );
+            // checking if closing of a response is detected
+            const closingBracketIdx = responseBuffer.indexOfMulti(respClosing);
             if(closingBracketIdx > -1) {
               const openingBracketIdx = responseBuffer.findIndex(
                 (element) => element === respOpening // checking placement of opening bracket
@@ -88,9 +110,7 @@ function App() {
       <button disabled={portState !== undefined} onClick={ async () => {
           port = await navigator.serial.requestPort({ filters });
           const productId = port.getInfo().usbProductId;
-          console.log(productId)
           await port.open({...defaultOptions, baudRate: portBaudRate[productId] });
-
           setPort(port);
           console.log("connected")
 
@@ -101,7 +121,9 @@ function App() {
             return;
           }
           const writer = port.writable.getWriter();
-          writer.write(textEncoder.encode('scanraw 1000000 1000000000\r'));
+
+          // TODO: check how it can be streamlined with param 3, as in https://github.com/mykhailopylyp/TinySAScanner/blob/main/scan.py#L35
+          writer.write(textEncoder.encode(`scanraw ${startFrequency} ${stopFrequency} ${points}\r`));
           writer.releaseLock();
 
       }}>
@@ -128,10 +150,10 @@ function App() {
 
       }}>Disconnect</button>
 
-        <div id="connected">
-          <p>Device name: {port?.productName}</p>
-          <p>Device manufacturer: {port?.manufacturerName}</p>
-        </div>
+      <div id="connected">
+        <p>Device name: {port?.getInfo()?.productName}</p>
+        <p>Device manufacturer: {port?.getInfo()?.manufacturerName}</p>
+      </div>
       </header>
     </div>
   );
