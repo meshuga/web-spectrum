@@ -432,6 +432,10 @@ return (
         console.log("connected")
         console.log(port)
 
+        const canvas = document.getElementById("canvas"),
+        canvasContext = canvas.getContext("2d");
+        canvasContext.clearRect(0, 0, canvas.width, canvas.height);
+
         readLoop(port);
         writeLoop(port);
       }}>Connect</Button>
