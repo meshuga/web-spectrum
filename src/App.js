@@ -7,6 +7,8 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import clsx from 'clsx';
+import Chip from '@mui/material/Chip';
+
 
 import {
   Unstable_NumberInput as BaseNumberInput,
@@ -271,6 +273,8 @@ function App() {
   const [stopFrequencyMag, setStopFrequencyMag] =   useState(1000000);
   const [points, setPoints] = useState(500);
 
+  const [currLvl, setCurrLvl] = useState("N/A");
+
   useEffect(()=>{
     const canvas = document.getElementById("canvas");
     var rect = canvas.parentNode.getBoundingClientRect();
@@ -395,6 +399,24 @@ function App() {
     "rtscts": false
 };
 
+const handleMouseMove = (event) => {
+  const offsetX = event.nativeEvent.touches ? event.nativeEvent.touches[0].pageX : event.nativeEvent.offsetX
+  const freq = startFrequency*startFrequencyMag + ((stopFrequency*stopFrequencyMag - startFrequency*startFrequencyMag)*(offsetX/width))
+
+  let freqStr;
+  if (freq > 1000000000) {
+    freqStr = `${(freq / 1000000000).toFixed(2)} GHz`;
+  } else if (freq > 1000000) {
+    freqStr = `${(freq / 1000000).toFixed(2)} MHz`;
+  } else if (freq > 1000) {
+    freqStr = `${(freq / 1000).toFixed(2)} kHz`;
+  } else {
+    freqStr = `${Math.trunc(freq)} Hz`;
+  }
+
+  setCurrLvl(freqStr)
+};
+
 return (
   <Container maxWidth="lg">
     <Box display="flex"
@@ -435,6 +457,8 @@ return (
     <FormControl defaultValue="" >
       <Label>Points</Label>
       <NumberInput
+        min={51}
+        max={500}
         disabled={portState !== undefined}
         aria-label="Points"
         placeholder="Type a number…"
@@ -489,11 +513,20 @@ return (
     </FormControl>
     
   </Box>
+  <Stack direction="row" spacing={1}>
+      <Chip label={`Current Frequency: ${currLvl}`} variant="outlined" />
+    </Stack>
   <Box
     display='flex'
     justifyContent='center'
   >
-    <canvas id="canvas" width={width} height={height}></canvas>
+    <canvas
+      id="canvas" 
+      width={width}
+      height={height}
+      onMouseMove={handleMouseMove}
+      onTouchMove={handleMouseMove}
+      ></canvas>
   </Box>
 </Container>
 );
