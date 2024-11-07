@@ -1,5 +1,6 @@
 # web-spectrum
-Web app for spectrum analyzers like tinySA
+Web app for spectrum analyzers like tinySA.
+![waterfall ](waterfall.jpg)
 
 ## Available Scripts
 
