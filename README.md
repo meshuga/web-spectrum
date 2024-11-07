@@ -2,7 +2,7 @@
 Web app for spectrum analyzers like tinySA.
 ![waterfall ](waterfall.jpg)
 
-Visit [https://meshuga.github.io/web-spectrum/](meshuga.github.io/web-spectrum) to access the app.
+Visit [meshuga.github.io/web-spectrum](https://meshuga.github.io/web-spectrum/) to access the app.
 
 ## Development
 
