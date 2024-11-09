@@ -7,6 +7,13 @@ Visit [meshuga.github.io/web-spectrum](https://meshuga.github.io/web-spectrum/) 
 Supported devices:
 * tinySA Ultra
 
+Supported environments:
+* Chrome
+* Edge
+* Opera
+
+See more: [caniuse.com/web-serial](https://caniuse.com/web-serial)
+
 ## Development
 
 In the project directory, you can run:
