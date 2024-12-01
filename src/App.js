@@ -250,8 +250,8 @@ portBaudRate[tinySAUltra.usbProductId] = 115200;
 const textEncoder = new TextEncoder();
 
 const xAscii = 120;
-const respOpening = 123;
-const respClosing = new TextEncoder().encode("}ch>");
+const respOpening = 123; // {
+const respClosing = 125; // }
 
 let port, reader;
 
@@ -379,6 +379,15 @@ function App() {
   let responseBuffer = new Int8Array([]);
 
   const readLoop = async () => {
+    const writer = port.writable.getWriter();
+  
+    // see https://github.com/mykhailopylyp/TinySAScanner/blob/main/scan.py#L35
+    // see https://tinysa.org/wiki/pmwiki.php?n=Main.USBInterface
+    const command = `scanraw ${startFrequency*startFrequencyMag} ${stopFrequency*stopFrequencyMag} ${points} 3\r`;
+    console.log(command)
+    writer.write(textEncoder.encode(command));
+    writer.releaseLock();
+
     // let reader;
     while (port && port.readable) {
       try {
@@ -390,17 +399,20 @@ function App() {
           if (value) {
             responseBuffer = new Uint8Array([ ...responseBuffer, ...value ]);
 
-            // checking if closing of a response is detected
-            const closingBracketIdx = responseBuffer.indexOfMulti(respClosing);
-            if(closingBracketIdx > -1) {
-              const openingBracketIdx = responseBuffer.findIndex(
-                (element) => element === respOpening // checking placement of opening bracket
-              );
+            let opening = -1, closing = -1;
 
-              processResponse(responseBuffer.slice(openingBracketIdx+1, closingBracketIdx));
-              responseBuffer = new Int8Array([]);
-            }
-
+            do {
+              opening = responseBuffer.indexOf(respOpening);
+              closing = responseBuffer.indexOf(respClosing);
+              if(opening !== -1 && closing !== -1) {
+                if (closing - opening - 1 !== points * 3) {
+                  console.warn("Incorrect response size: " + (closing - opening - 1) + ". Should be: " + (points * 3))
+                } else {
+                  processResponse(responseBuffer.slice(opening+1, closing))
+                }
+                responseBuffer = responseBuffer.slice(closing + 1);
+              }
+            } while(opening !== -1 && closing !== -1)
           }
           if (done) {
             break;
@@ -422,7 +434,8 @@ function App() {
       const writer = port.writable.getWriter();
   
       // TODO: check how it can be streamlined with param 3, as in https://github.com/mykhailopylyp/TinySAScanner/blob/main/scan.py#L35
-      const command = `scanraw ${startFrequency*startFrequencyMag} ${stopFrequency*stopFrequencyMag} ${points}\r`;
+      // e.g. scanraw 88000000 99000000 450 3
+      const command = `scanraw ${startFrequency*startFrequencyMag} ${stopFrequency*stopFrequencyMag} ${points} 3\r`;
       console.log(command)
       writer.write(textEncoder.encode(command));
       writer.releaseLock();
@@ -483,9 +496,12 @@ return (
         reset();
 
         readLoop(port);
-        writeLoop(port);
+        // writeLoop(port);
       }}>Connect</Button>
       <Button disabled={portState === undefined} onClick={async ()=>{
+
+
+
       const localPort = port;
       port = undefined;
       setPort(undefined)
