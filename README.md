@@ -1,6 +1,6 @@
 # web-spectrum
 Web app for spectrum analyzers.
-![waterfall ](waterfall.jpg)
+![spectrum ](spectrum.gif)
 
 Visit [meshuga.github.io/web-spectrum](https://meshuga.github.io/web-spectrum/) to access the app.
 
