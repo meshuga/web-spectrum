@@ -250,8 +250,8 @@ portBaudRate[tinySAUltra.usbProductId] = 115200;
 const textEncoder = new TextEncoder();
 
 const xAscii = 120;
-const respOpening = 123;
-const respClosing = new TextEncoder().encode("}ch>");
+const respOpening = 123; // {
+const respClosing = 125; // }
 
 let port, reader;
 
@@ -382,6 +382,7 @@ function App() {
     const writer = port.writable.getWriter();
   
     // see https://github.com/mykhailopylyp/TinySAScanner/blob/main/scan.py#L35
+    // see https://tinysa.org/wiki/pmwiki.php?n=Main.USBInterface
     const command = `scanraw ${startFrequency*startFrequencyMag} ${stopFrequency*stopFrequencyMag} ${points} 3\r`;
     console.log(command)
     writer.write(textEncoder.encode(command));
@@ -401,13 +402,14 @@ function App() {
             let opening = -1, closing = -1;
 
             do {
-              opening = responseBuffer.indexOfMulti(respOpening);
-              closing = responseBuffer.indexOfMulti(respClosing);
+              opening = responseBuffer.indexOf(respOpening);
+              closing = responseBuffer.indexOf(respClosing);
               if(opening !== -1 && closing !== -1) {
-                if (closing - opening - 2 !== 50*points * 3) {
-                  console.warn("Incorrect response size: " + (closing - opening - 2) + ". Should be: " + (50*points * 3))
+                if (closing - opening - 1 !== points * 3) {
+                  console.warn("Incorrect response size: " + (closing - opening - 1) + ". Should be: " + (points * 3))
+                } else {
+                  processResponse(responseBuffer.slice(opening+1, closing))
                 }
-                processResponse(responseBuffer.slice(opening+1, closing)) // should be 50*points * 3 items
                 responseBuffer = responseBuffer.slice(closing + 1);
               }
             } while(opening !== -1 && closing !== -1)
@@ -497,6 +499,9 @@ return (
         // writeLoop(port);
       }}>Connect</Button>
       <Button disabled={portState === undefined} onClick={async ()=>{
+
+
+
       const localPort = port;
       port = undefined;
       setPort(undefined)
