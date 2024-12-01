@@ -250,8 +250,7 @@ portBaudRate[tinySAUltra.usbProductId] = 115200;
 const textEncoder = new TextEncoder();
 
 const xAscii = 120;
-const respOpening = 123; // {
-const respClosing = 125; // }
+const respDelimeter = [125, 123]; // }{
 
 let port, reader;
 
@@ -380,10 +379,14 @@ function App() {
 
   const readLoop = async () => {
     const writer = port.writable.getWriter();
+
+    // see https://tinysa.org/wiki/pmwiki.php?n=Main.USBInterface
+    let command = `abort on\r`;
+    console.log(command)
+    writer.write(textEncoder.encode(command));
   
     // see https://github.com/mykhailopylyp/TinySAScanner/blob/main/scan.py#L35
-    // see https://tinysa.org/wiki/pmwiki.php?n=Main.USBInterface
-    const command = `scanraw ${startFrequency*startFrequencyMag} ${stopFrequency*stopFrequencyMag} ${points} 3\r`;
+    command = `scanraw ${startFrequency*startFrequencyMag} ${stopFrequency*stopFrequencyMag} ${points} 3\r`;
     console.log(command)
     writer.write(textEncoder.encode(command));
     writer.releaseLock();
@@ -402,15 +405,17 @@ function App() {
             let opening = -1, closing = -1;
 
             do {
-              opening = responseBuffer.indexOf(respOpening);
-              closing = responseBuffer.indexOf(respClosing);
-              if(opening !== -1 && closing !== -1) {
-                if (closing - opening - 1 !== points * 3) {
-                  console.warn("Incorrect response size: " + (closing - opening - 1) + ". Should be: " + (points * 3))
-                } else {
-                  processResponse(responseBuffer.slice(opening+1, closing))
+              opening = responseBuffer.indexOfMulti(respDelimeter);
+              if(opening !== -1) {
+                closing = responseBuffer.indexOfMulti(respDelimeter, opening+2);
+                if(closing !== -1) {
+                  if (closing - opening - 2 !== points * 3) {
+                    console.warn("Incorrect response size: " + (closing - opening - 2) + ". Should be: " + (points * 3))
+                  } else {
+                    processResponse(responseBuffer.slice(opening+2, closing))
+                  }
+                  responseBuffer = responseBuffer.slice(closing); // leave out for next batch
                 }
-                responseBuffer = responseBuffer.slice(closing + 1);
               }
             } while(opening !== -1 && closing !== -1)
           }
@@ -499,8 +504,12 @@ return (
         // writeLoop(port);
       }}>Connect</Button>
       <Button disabled={portState === undefined} onClick={async ()=>{
-
-
+      const writer = port.writable.getWriter();
+        
+      const command = `abort\r`;
+      console.log(command)
+      writer.write(textEncoder.encode(command));
+      writer.releaseLock();
 
       const localPort = port;
       port = undefined;
