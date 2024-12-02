@@ -16,6 +16,7 @@ import Stack from '@mui/system/Stack';
 
 import Label from '../components/Label';
 import NumberInput from '../components/NumberInput';
+import Decoder from './Decoder';
 
 function downloadFile(fileName, urlData) {
   var aLink = document.createElement('a');
@@ -40,10 +41,6 @@ const xAscii = 120;
 const respDelimeter = [125, 123]; // }{
 
 let port, reader;
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 // eslint-disable-next-line no-extend-native
 Uint8Array.prototype.indexOfMulti = function(searchElements, fromIndex) {
@@ -102,7 +99,6 @@ function Spectrum() {
     canvasContext.clearRect(0, 0, canvas.width, canvas.height);
   };
   const download = () => {
-    console.log(powerPoints);
     let lines = ''
     for(let i=0; i<powerPoints.length; i++) {
       lines += powerPoints[i].join(',');
@@ -221,20 +217,6 @@ function Spectrum() {
     }
   };
 
-  const writeLoop = async () => {
-    while (port && port.writable) {
-      const writer = port.writable.getWriter();
-  
-      // TODO: check how it can be streamlined with param 3, as in https://github.com/mykhailopylyp/TinySAScanner/blob/main/scan.py#L35
-      // e.g. scanraw 88000000 99000000 450 3
-      const command = `scanraw ${startFrequency*startFrequencyMag} ${stopFrequency*stopFrequencyMag} ${points} 3\r`;
-      console.log(command)
-      writer.write(textEncoder.encode(command));
-      writer.releaseLock();
-      await sleep(Math.max(1.6*points, 150));
-    }
-  };
-
   const defaultOptions = {
     "baudRate": 115200,
     "dataBits": 8,
@@ -286,7 +268,6 @@ return (
         reset();
 
         readLoop(port);
-        // writeLoop(port);
       }}>Connect</Button>
       <Button disabled={portState === undefined} onClick={async ()=>{
       const writer = port.writable.getWriter();
