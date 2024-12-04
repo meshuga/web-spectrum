@@ -24,7 +24,9 @@ function downloadFile(fileName, urlData) {
   var event = new MouseEvent('click');
   aLink.dispatchEvent(event);
 }
-
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 const tinySAUltra = { usbVendorId: 0x0483, usbProductId: 0x5740 }
 
 const portBaudRate = {};
@@ -55,23 +57,18 @@ Uint8Array.prototype.indexOfMulti = function(searchElements, fromIndex) {
 
 function Decoder() {
   const [portState, setPort] = useState(undefined);
-  const [frequency, setFrequency] = useState(88);
-  const [frequencyMag, setFrequencyMag] = useState(1000000);
+  const [frequency, setFrequency] = useState(433900);
+  const [frequencyMag, setFrequencyMag] = useState(1000);
 
   const filters = [tinySAUltra];
 
-  const reset = () => {
-    const canvas = document.getElementById("canvas"),
-    canvasContext = canvas.getContext("2d");
-    canvasContext.clearRect(0, 0, canvas.width, canvas.height);
-  };
   const download = () => {
     let lines = ''
     downloadFile(`spectrum-${new Date().toISOString()}.csv`, 'data:text/csv;charset=UTF-8,' + encodeURIComponent(lines));
   };
 
   const readData = async () => {
-    let responseBuffer
+    let responseBuffer = [];
     while (port && port.readable) {
       try {
         reader = port.readable.getReader();
@@ -81,7 +78,7 @@ function Decoder() {
   
           if (value) {
             responseBuffer = new Uint8Array([ ...responseBuffer, ...value ]);
-            console.log(TextDecoder().decode(responseBuffer))
+            console.log(new TextDecoder().decode(responseBuffer))
             // TODO return function once read data
           }
           if (done) {
@@ -106,19 +103,22 @@ function Decoder() {
     let command = `abort on\r`;
     console.log(command)
     writer.write(textEncoder.encode(command));
+    await sleep(150);
 
     command = `sweep cw ${frequency*frequencyMag}\r`;
     console.log(command)
     writer.write(textEncoder.encode(command));
-
+    await sleep(150);
 
     command = `sweeptime 50m\r`; // TODO: needs to be configurable
     console.log(command)
     writer.write(textEncoder.encode(command));
+    await sleep(150);
 
     command = `trigger -70\r`; // TODO: needs to be configurable
     console.log(command)
     writer.write(textEncoder.encode(command));
+    await sleep(150);
 
     command = `wait\r`;
     console.log(command)
@@ -127,6 +127,8 @@ function Decoder() {
     command = `data 1\r`;
     console.log(command)
     writer.write(textEncoder.encode(command));
+
+    writer.releaseLock();
 
     readData();
   };
@@ -161,8 +163,6 @@ return (
         console.log("connected")
         console.log(port)
 
-        reset();
-
         setTriggerAndDecode(port);
       }}>Trigger&Decode</Button>
       <Button disabled={portState === undefined} onClick={async ()=>{
@@ -190,7 +190,6 @@ return (
       }
       }}>Disconnect</Button>
         </ButtonGroup>
-        <Button onClick={reset}>Reset</Button>
         <Button onClick={download}>Download decoded data</Button>
       </Stack>
     <FormControl defaultValue="">
