@@ -174,7 +174,6 @@ function Spectrum() {
     writer.write(textEncoder.encode(command));
     writer.releaseLock();
 
-    // let reader;
     while (port && port.readable) {
       try {
         reader = port.readable.getReader();

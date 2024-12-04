@@ -55,8 +55,8 @@ Uint8Array.prototype.indexOfMulti = function(searchElements, fromIndex) {
 
 function Decoder() {
   const [portState, setPort] = useState(undefined);
-  const [frequency, setStartFrequency] = useState(88);
-  const [frequencyMag, setStartFrequencyMag] = useState(1000000);
+  const [frequency, setFrequency] = useState(88);
+  const [frequencyMag, setFrequencyMag] = useState(1000000);
 
   const filters = [tinySAUltra];
 
@@ -70,7 +70,36 @@ function Decoder() {
     downloadFile(`spectrum-${new Date().toISOString()}.csv`, 'data:text/csv;charset=UTF-8,' + encodeURIComponent(lines));
   };
 
-  const readLoop = async () => {
+  const readData = async () => {
+    let responseBuffer
+    while (port && port.readable) {
+      try {
+        reader = port.readable.getReader();
+        for (;;) {
+          // we don't pass own buffer as we need to keep buffers to find response
+          const {value, done} = await reader.read();
+  
+          if (value) {
+            responseBuffer = new Uint8Array([ ...responseBuffer, ...value ]);
+            console.log(TextDecoder().decode(responseBuffer))
+            // TODO return function once read data
+          }
+          if (done) {
+            break;
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (reader) {
+          reader.releaseLock();
+          reader = undefined;
+        }
+      }
+    }
+  };
+
+  const setTriggerAndDecode = async () => {
     const writer = port.writable.getWriter();
 
     // see https://tinysa.org/wiki/pmwiki.php?n=Main.USBInterface
@@ -78,6 +107,28 @@ function Decoder() {
     console.log(command)
     writer.write(textEncoder.encode(command));
 
+    command = `sweep cw ${frequency*frequencyMag}\r`;
+    console.log(command)
+    writer.write(textEncoder.encode(command));
+
+
+    command = `sweeptime 50m\r`; // TODO: needs to be configurable
+    console.log(command)
+    writer.write(textEncoder.encode(command));
+
+    command = `trigger -70\r`; // TODO: needs to be configurable
+    console.log(command)
+    writer.write(textEncoder.encode(command));
+
+    command = `wait\r`;
+    console.log(command)
+    writer.write(textEncoder.encode(command));
+
+    command = `data 1\r`;
+    console.log(command)
+    writer.write(textEncoder.encode(command));
+
+    readData();
   };
 
   const defaultOptions = {
@@ -112,9 +163,8 @@ return (
 
         reset();
 
-        readLoop(port);
-        // writeLoop(port);
-      }}>Connect</Button>
+        setTriggerAndDecode(port);
+      }}>Trigger&Decode</Button>
       <Button disabled={portState === undefined} onClick={async ()=>{
       const writer = port.writable.getWriter();
         
@@ -151,12 +201,12 @@ return (
           aria-label="Tested frequency"
           placeholder="Type a number…"
           value={frequency}
-          onChange={(_, val) => setStartFrequency(val)}
+          onChange={(_, val) => setFrequency(val)}
         />
         <Select
           disabled={portState !== undefined}
           value={frequencyMag}
-          onChange={(event) => setStartFrequencyMag(event.target.value)}
+          onChange={(event) => setFrequencyMag(event.target.value)}
           sx={{ marginRight: '15px' }}
         >
           <MenuItem value={1}>Hz</MenuItem>
