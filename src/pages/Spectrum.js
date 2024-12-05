@@ -16,7 +16,6 @@ import Stack from '@mui/system/Stack';
 
 import Label from '../components/Label';
 import NumberInput from '../components/NumberInput';
-import Decoder from './Decoder';
 
 function downloadFile(fileName, urlData) {
   var aLink = document.createElement('a');
@@ -41,6 +40,13 @@ const xAscii = 120;
 const respDelimeter = [125, 123]; // }{
 
 let port, reader;
+
+function concatTypedArrays(a, b) { // a, b TypedArray of same type
+  var c = new Uint8Array(a.length + b.length);
+  c.set(a, 0);
+  c.set(b, a.length);
+  return c;
+}
 
 // eslint-disable-next-line no-extend-native
 Uint8Array.prototype.indexOfMulti = function(searchElements, fromIndex) {
@@ -182,7 +188,8 @@ function Spectrum() {
           const {value, done} = await reader.read();
   
           if (value) {
-            responseBuffer = new Uint8Array([ ...responseBuffer, ...value ]);
+            responseBuffer = concatTypedArrays(responseBuffer, value);
+            // responseBuffer = new Uint8Array([ ...responseBuffer, ...value ]);
 
             let opening = -1, closing = -1;
 

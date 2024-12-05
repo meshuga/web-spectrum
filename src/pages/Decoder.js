@@ -36,6 +36,18 @@ const textEncoder = new TextEncoder();
 
 let port, reader;
 
+const LastCommandTxt = new TextEncoder().encode("ch> data 1")
+const respNumberPart = new TextEncoder().encode("e+0")
+const respDone = new TextEncoder().encode("ch> ")
+
+function concatUint8Arrays(a, b) { // a, b TypedArray of same type
+  var c = new Uint8Array(a.length + b.length);
+  c.set(a, 0);
+  c.set(b, a.length);
+  return c;
+}
+
+
 // eslint-disable-next-line no-extend-native
 Uint8Array.prototype.indexOfMulti = function(searchElements, fromIndex) {
   fromIndex = fromIndex || 0;
@@ -53,6 +65,20 @@ Uint8Array.prototype.indexOfMulti = function(searchElements, fromIndex) {
   }
 
   return(i === index + searchElements.length) ? index : -1;
+};
+
+// eslint-disable-next-line no-extend-native
+Uint8Array.prototype.endsWith = function(suffix) {
+  if(this.length<suffix.length) {
+    return false;
+  }
+  for(var i = this.length - suffix.length, j = 0; i < this.length; i++, j++) {
+      if(this[i] !== suffix[j]) {
+          return false;
+      }
+  }
+  return true;
+
 };
 
 function Decoder() {
@@ -77,9 +103,12 @@ function Decoder() {
           const {value, done} = await reader.read();
   
           if (value) {
-            responseBuffer = new Uint8Array([ ...responseBuffer, ...value ]);
-            console.log(new TextDecoder().decode(responseBuffer))
-            // TODO return function once read data
+            responseBuffer = concatUint8Arrays(responseBuffer, value);
+
+            if (responseBuffer.indexOfMulti(respNumberPart) !== -1) {
+              if (responseBuffer.endsWith(respDone))
+                console.log(new TextDecoder().decode(responseBuffer))
+            }
           }
           if (done) {
             break;
