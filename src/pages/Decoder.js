@@ -4,7 +4,7 @@ import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
-
+import { LineChart } from '@mui/x-charts/LineChart';
 
 import { FormControl } from '@mui/base/FormControl';
 
@@ -35,6 +35,9 @@ portBaudRate[tinySAUltra.usbProductId] = 115200;
 const textEncoder = new TextEncoder();
 
 let port, reader;
+
+const width = 1024,
+height = 500;
 
 const LastCommandTxt = new TextEncoder().encode("ch> data 1")
 const respNumberPart = new TextEncoder().encode("e+0")
@@ -85,6 +88,9 @@ function Decoder() {
   const [portState, setPort] = useState(undefined);
   const [frequency, setFrequency] = useState(433900);
   const [frequencyMag, setFrequencyMag] = useState(1000);
+
+  const [powerLevels, setPowerLevels] = useState([]);
+  const xPoints = [];
 
   const filters = [tinySAUltra];
 
@@ -249,7 +255,14 @@ return (
     display='flex'
     justifyContent='center'
   >
-    Work in progress
+    <LineChart
+      width={width+80}
+      height={300}
+      slotProps={{ legend: { hidden: true } }}
+      series={[{ data: powerLevels, label: 'dB',  showMark: false, color: '#cc0052' }]}
+      xAxis={[{ scaleType: 'linear'}]}
+      sx={{ }}
+    />
   </Box>
 </Container>
 );

@@ -41,7 +41,7 @@ const respDelimeter = [125, 123]; // }{
 
 let port, reader;
 
-function concatTypedArrays(a, b) { // a, b TypedArray of same type
+function concatUint8Arrays(a, b) { // a, b TypedArray of same type
   var c = new Uint8Array(a.length + b.length);
   c.set(a, 0);
   c.set(b, a.length);
@@ -188,7 +188,7 @@ function Spectrum() {
           const {value, done} = await reader.read();
   
           if (value) {
-            responseBuffer = concatTypedArrays(responseBuffer, value);
+            responseBuffer = concatUint8Arrays(responseBuffer, value);
             // responseBuffer = new Uint8Array([ ...responseBuffer, ...value ]);
 
             let opening = -1, closing = -1;
