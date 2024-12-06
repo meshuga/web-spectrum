@@ -4,6 +4,10 @@ Web app for spectrum analyzers.
 
 Visit [meshuga.github.io/web-spectrum](https://meshuga.github.io/web-spectrum/) to access the app.
 
+The application has two features:
+* Spectrum analyzer
+* Data decoding
+
 Supported devices:
 * tinySA Ultra
 
@@ -13,6 +17,14 @@ Supported environments:
 * Opera
 
 See more: [caniuse.com/web-serial](https://caniuse.com/web-serial)
+
+## Spectrum analyzer
+
+## Data decoding
+
+![decode](decode.jpg)
+
+Data decode sets a trigger and upon detection of a signal, the device captures it for decoding purposes.
 
 ## Development
 

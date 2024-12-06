@@ -39,9 +39,13 @@ let port, reader;
 const width = 1024,
 height = 500;
 
-const LastCommandTxt = new TextEncoder().encode("ch> data 1")
-const respNumberPart = new TextEncoder().encode("e+0")
-const respDone = new TextEncoder().encode("ch> ")
+const sweeptimeCommand = 'sweeptime';
+const sweeptimeUsage = `${sweeptimeCommand} 0.003..60`;
+const getDataCommand = 'data 1';
+const prompt = 'ch> ';
+const newlineResp = '\r\n';
+const respNumberPart = textEncoder.encode('e+0')
+const respDone = textEncoder.encode(prompt)
 
 function concatUint8Arrays(a, b) { // a, b TypedArray of same type
   var c = new Uint8Array(a.length + b.length);
@@ -90,7 +94,7 @@ function Decoder() {
   const [frequencyMag, setFrequencyMag] = useState(1000);
 
   const [powerLevels, setPowerLevels] = useState([]);
-  const xPoints = [];
+  const [xPoints, setXPoints] = useState([]);
 
   const filters = [tinySAUltra];
 
@@ -110,10 +114,32 @@ function Decoder() {
   
           if (value) {
             responseBuffer = concatUint8Arrays(responseBuffer, value);
-
             if (responseBuffer.indexOfMulti(respNumberPart) !== -1) {
-              if (responseBuffer.endsWith(respDone))
-                console.log(new TextDecoder().decode(responseBuffer))
+              if (responseBuffer.endsWith(respDone)) {
+                if(responseBuffer.indexOfMulti(textEncoder.encode(sweeptimeUsage)) === -1) {
+                  const writer = port.writable.getWriter();
+                  const command = `sweeptime\r`; // used to retrieve sweep time
+                  console.log(command);
+                  writer.write(textEncoder.encode(command));
+                  writer.releaseLock();
+                } else {
+                  const fullResponse = new TextDecoder().decode(responseBuffer);
+
+                  const startIdx = fullResponse.indexOf(getDataCommand) + getDataCommand.length + newlineResp.length;
+                  const endIdx = fullResponse.indexOf(prompt+sweeptimeCommand, startIdx) - newlineResp.length;
+                  const responses = fullResponse.slice(startIdx, endIdx).split(newlineResp).map(numStr => parseFloat(numStr));
+
+                  const sweeptimeStartIdx = fullResponse.indexOf(sweeptimeUsage) + sweeptimeUsage.length + newlineResp.length;
+                  const sweeptimeEndIdx = fullResponse.indexOf('ms', sweeptimeStartIdx);
+
+                  const sweeptime = parseFloat(fullResponse.slice(sweeptimeStartIdx, sweeptimeEndIdx));
+                  const stepMSecond = sweeptime / responses.length;
+                  const respXPoints = responses.map((_, idx) => idx*stepMSecond);
+
+                  setPowerLevels(responses);
+                  setXPoints(respXPoints);
+                }
+              }
             }
           }
           if (done) {
@@ -132,40 +158,40 @@ function Decoder() {
   };
 
   const setTriggerAndDecode = async () => {
+    readData(); // response buffer in tinySA can hold only one response, so it must be read continously
+
     const writer = port.writable.getWriter();
 
     // see https://tinysa.org/wiki/pmwiki.php?n=Main.USBInterface
     let command = `abort on\r`;
-    console.log(command)
+    console.log(command);
     writer.write(textEncoder.encode(command));
     await sleep(150);
 
     command = `sweep cw ${frequency*frequencyMag}\r`;
-    console.log(command)
+    console.log(command);
     writer.write(textEncoder.encode(command));
     await sleep(150);
 
     command = `sweeptime 50m\r`; // TODO: needs to be configurable
-    console.log(command)
+    console.log(command);
     writer.write(textEncoder.encode(command));
     await sleep(150);
 
     command = `trigger -70\r`; // TODO: needs to be configurable
-    console.log(command)
+    console.log(command);
     writer.write(textEncoder.encode(command));
     await sleep(150);
 
     command = `wait\r`;
-    console.log(command)
+    console.log(command);
     writer.write(textEncoder.encode(command));
 
-    command = `data 1\r`;
-    console.log(command)
+    command = `${getDataCommand}\r`;
+    console.log(command);
     writer.write(textEncoder.encode(command));
 
     writer.releaseLock();
-
-    readData();
   };
 
   const defaultOptions = {
@@ -260,7 +286,7 @@ return (
       height={300}
       slotProps={{ legend: { hidden: true } }}
       series={[{ data: powerLevels, label: 'dB',  showMark: false, color: '#cc0052' }]}
-      xAxis={[{ scaleType: 'linear'}]}
+      xAxis={[{ data: xPoints}]}
       sx={{ }}
     />
   </Box>
