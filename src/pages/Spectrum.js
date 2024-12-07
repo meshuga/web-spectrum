@@ -313,7 +313,7 @@ return (
         aria-label="Points"
         placeholder="Type a number…"
         value={points}
-        onChange={(event, val) => setPoints(val)}
+        onChange={(_, val) => setPoints(val)}
       />
     </FormControl>
     <FormControl defaultValue="">
@@ -324,7 +324,7 @@ return (
           aria-label="Start frequency"
           placeholder="Type a number…"
           value={startFrequency}
-          onChange={(event, val) => setStartFrequency(val)}
+          onChange={(_, val) => setStartFrequency(val)}
         />
         <Select
           disabled={portState !== undefined}

@@ -92,6 +92,8 @@ function Decoder() {
   const [portState, setPort] = useState(undefined);
   const [frequency, setFrequency] = useState(433900);
   const [frequencyMag, setFrequencyMag] = useState(1000);
+  const [sweeptimeValue, setSweeptimeValue] = useState(300);
+  const [triggerLevel, setTriggerLevel] = useState(-70);
 
   const [powerLevels, setPowerLevels] = useState([]);
   const [xPoints, setXPoints] = useState([]);
@@ -124,6 +126,7 @@ function Decoder() {
                   writer.releaseLock();
                 } else {
                   const fullResponse = new TextDecoder().decode(responseBuffer);
+                  console.log(fullResponse);
 
                   const startIdx = fullResponse.indexOf(getDataCommand) + getDataCommand.length + newlineResp.length;
                   const endIdx = fullResponse.indexOf(prompt+sweeptimeCommand, startIdx) - newlineResp.length;
@@ -166,19 +169,23 @@ function Decoder() {
     let command = `abort on\r`;
     console.log(command);
     writer.write(textEncoder.encode(command));
-    await sleep(150);
+
+    command = `spur off\r`;
+    console.log(command);
+    writer.write(textEncoder.encode(command));
+    await sleep(100);
 
     command = `sweep cw ${frequency*frequencyMag}\r`;
     console.log(command);
     writer.write(textEncoder.encode(command));
-    await sleep(150);
+    await sleep(100);
 
-    command = `sweeptime 50m\r`; // TODO: needs to be configurable
+    command = `${sweeptimeCommand} ${sweeptimeValue}m\r`; // TODO: needs to be configurable
     console.log(command);
     writer.write(textEncoder.encode(command));
-    await sleep(150);
+    await sleep(100);
 
-    command = `trigger -70\r`; // TODO: needs to be configurable
+    command = `trigger ${triggerLevel}\r`; // TODO: needs to be configurable
     console.log(command);
     writer.write(textEncoder.encode(command));
     await sleep(150);
@@ -275,7 +282,31 @@ return (
           <MenuItem value={1000000000}>GHz</MenuItem>
         </Select>
       </Stack>
-    </FormControl>    
+    </FormControl>
+    <FormControl defaultValue="" >
+      <Label>Sweep time [ms]</Label>
+      <NumberInput
+        min={10}
+        max={5000}
+        disabled={portState !== undefined}
+        aria-label="Sweep time [ms]"
+        placeholder="Type a number…"
+        value={sweeptimeValue}
+        onChange={(_, val) => setSweeptimeValue(val)}
+      />
+    </FormControl>
+    <FormControl defaultValue="" >
+      <Label>Trigger level [dBm]</Label>
+      <NumberInput
+        min={-100}
+        max={0}
+        disabled={portState !== undefined}
+        aria-label="Trigger level [dBm]"
+        placeholder="Type a number…"
+        value={triggerLevel}
+        onChange={(_, val) => setTriggerLevel(val)}
+      />
+    </FormControl>
   </Box>
   <Box
     display='flex'
