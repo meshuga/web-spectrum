@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import Container from '@mui/material/Container';
 import Box from '@mui/material/Box';
@@ -15,6 +15,14 @@ import Stack from '@mui/system/Stack';
 
 import Label from '../components/Label';
 import NumberInput from '../components/NumberInput';
+
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
 
 function downloadFile(fileName, urlData) {
   var aLink = document.createElement('a');
@@ -36,8 +44,7 @@ const textEncoder = new TextEncoder();
 
 let port, reader;
 
-const width = 1024,
-height = 500;
+const width = 1024;
 
 const sweeptimeCommand = 'sweeptime';
 const sweeptimeUsage = `${sweeptimeCommand} 0.003..60`;
@@ -52,6 +59,20 @@ const concatUint8Arrays = (a, b) => { // a, b TypedArray of same type
   c.set(a, 0);
   c.set(b, a.length);
   return c;
+};
+
+const formatFrequency = (freq) => {
+  let freqStr;
+  if (freq > 1000000000) {
+    freqStr = `${(freq / 1000000000).toFixed(2)} GHz`;
+  } else if (freq > 1000000) {
+    freqStr = `${(freq / 1000000).toFixed(2)} MHz`;
+  } else if (freq > 1000) {
+    freqStr = `${(freq / 1000).toFixed(2)} kHz`;
+  } else {
+    freqStr = `${Math.trunc(freq)} Hz`;
+  }
+  return freqStr;
 };
 
 
@@ -132,7 +153,9 @@ const decodePulseGroups = (pulsePackages) => {
   const responses = [];
   // remove leading zero from package
   for (let i=0; i< pulsePackages.length; i++) {
+    // simple pre-abmle for GateTX type of a message (in Flipper nomenclature)
     pulsePackages[i].shift();
+
     const decimalOutput = parseInt(pulsePackages[i].join(""), 2);
     const hexOutput = decimalOutput.toString(16).toUpperCase();
     responses.push(hexOutput);
@@ -170,8 +193,9 @@ Uint8Array.prototype.endsWith = function(suffix) {
       }
   }
   return true;
-
 };
+
+let latestDecodedItems = [];
 
 function Decoder() {
   const [portState, setPort] = useState(undefined);
@@ -183,6 +207,13 @@ function Decoder() {
 
   const [powerLevels, setPowerLevels] = useState([]);
   const [xPoints, setXPoints] = useState([]);
+
+  const [decodedItems, setDecodedItems] = useState([]);
+
+  useEffect(() => {
+    latestDecodedItems = decodedItems;
+  }, [decodedItems]);
+
 
   const filters = [tinySAUltra];
 
@@ -231,7 +262,18 @@ function Decoder() {
                   let pulsePackages = detectPulses(responses, stepMSecond, triggerLevel);
                   let decodedMessages = decodePulseGroups(pulsePackages);
 
-                  console.log(decodedMessages);
+                  console.log(decodedMessages)
+
+                  setDecodedItems([{
+                    data: decodedMessages,
+                    time: new Date().toISOString(),
+                    frequency: formatFrequency(frequency*frequencyMag),
+                    sweeptime: sweeptime + (sweeptimeUnit === "" ? " s" : " ms"),
+                    triggerLevel: triggerLevel + " dBm"
+                  }, ...latestDecodedItems]);
+
+                  // decoding logic completed, can arm trigger for more data
+                  // await armTrigger();
                 }
               }
             }
@@ -251,9 +293,7 @@ function Decoder() {
     }
   };
 
-  const setTriggerAndDecode = async () => {
-    readData(); // response buffer in tinySA can hold only one response, so it must be read continously
-
+  const armTrigger = async () => {
     const writer = port.writable.getWriter();
 
     // there's too many commands sent, so not using "abort on" command
@@ -287,6 +327,11 @@ function Decoder() {
     writer.write(textEncoder.encode(command));
 
     writer.releaseLock();
+  }
+
+  const setTriggerAndDecode = async () => {
+    readData(); // response buffer in tinySA can hold only one response, so it must be read continously, must be invoked asynchrously, cannot await.
+    await armTrigger();
   };
 
   const defaultOptions = {
@@ -403,7 +448,6 @@ return (
     </FormControl>
   </Box>
   <Box
-    display='flex'
     justifyContent='center'
   >
     <LineChart
@@ -414,6 +458,35 @@ return (
       xAxis={[{ data: xPoints}]}
       sx={{ }}
     />
+    <TableContainer component={Paper}>
+    <Table sx={{ minWidth: 650 }} aria-label="simple table">
+      <TableHead>
+        <TableRow>
+          <TableCell>Data</TableCell>
+          <TableCell align="right">Time</TableCell>
+          <TableCell align="right">Frequency</TableCell>
+          <TableCell align="right">Sweep time</TableCell>
+          <TableCell align="right">Trigger level</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {decodedItems.map((row) => (
+          <TableRow
+            key={row.time}
+            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+          >
+            <TableCell component="th" scope="row">
+              {row.data}
+            </TableCell>
+            <TableCell align="right">{row.time}</TableCell>
+            <TableCell align="right">{row.frequency}</TableCell>
+            <TableCell align="right">{row.sweeptime}</TableCell>
+            <TableCell align="right">{row.triggerLevel}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </TableContainer>
   </Box>
 </Container>
 );
