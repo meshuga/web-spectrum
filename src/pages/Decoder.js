@@ -91,10 +91,10 @@ const detectPulses = (responses, stepMSecond, triggerLevel) => {
         gapCounter = 1;
         if (dataCounter * stepMSecond <= oneOOKwidth) {
           // 1 bit detected, need to add to a package
-          packageData.push(1);
+          packageData.push("1");
         } else {
           // 0 detected, need to add to a package
-          packageData.push(0);
+          packageData.push("0");
         }
       } else {
         // we are still detecting a pulse, need to count the puse
@@ -129,11 +129,15 @@ const detectPulses = (responses, stepMSecond, triggerLevel) => {
 };
 
 const decodePulseGroups = (pulsePackages) => {
+  const responses = [];
   // remove leading zero from package
   for (let i=0; i< pulsePackages.length; i++) {
     pulsePackages[i].shift();
+    const decimalOutput = parseInt(pulsePackages[i].join(""), 2);
+    const hexOutput = decimalOutput.toString(16).toUpperCase();
+    responses.push(hexOutput);
   }
-  return pulsePackages;
+  return responses;
 };
 
 // eslint-disable-next-line no-extend-native
