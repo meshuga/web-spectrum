@@ -47,13 +47,20 @@ const newlineResp = '\r\n';
 const respNumberPart = textEncoder.encode('e+0')
 const respDone = textEncoder.encode(prompt)
 
-function concatUint8Arrays(a, b) { // a, b TypedArray of same type
+const concatUint8Arrays = (a, b) => { // a, b TypedArray of same type
   var c = new Uint8Array(a.length + b.length);
   c.set(a, 0);
   c.set(b, a.length);
   return c;
-}
+};
 
+const detectPulses = (responses, stepMSecond) => {
+  return [];
+};
+
+const decodePulseGroups = (responses, stepMSecond) => {
+  return [];
+};
 
 // eslint-disable-next-line no-extend-native
 Uint8Array.prototype.indexOfMulti = function(searchElements, fromIndex) {
@@ -92,7 +99,8 @@ function Decoder() {
   const [portState, setPort] = useState(undefined);
   const [frequency, setFrequency] = useState(433900);
   const [frequencyMag, setFrequencyMag] = useState(1000);
-  const [sweeptimeValue, setSweeptimeValue] = useState(300);
+  const [sweeptimeValue, setSweeptimeValue] = useState(100);
+  const [sweeptimeUnit, setSweeptimeUnit] = useState("m");
   const [triggerLevel, setTriggerLevel] = useState(-70);
 
   const [powerLevels, setPowerLevels] = useState([]);
@@ -141,6 +149,11 @@ function Decoder() {
 
                   setPowerLevels(responses);
                   setXPoints(respXPoints);
+
+                  let pulseGroups = detectPulses(responses, stepMSecond);
+                  let decodedMessages = (pulseGroups);
+
+                  console.log(decodedMessages);
                 }
               }
             }
@@ -165,25 +178,22 @@ function Decoder() {
 
     const writer = port.writable.getWriter();
 
-    // see https://tinysa.org/wiki/pmwiki.php?n=Main.USBInterface
-    let command = `abort on\r`;
-    console.log(command);
-    writer.write(textEncoder.encode(command));
+    // there's too many commands sent, so not using "abort on" command
 
-    command = `spur off\r`;
+    let command = `spur off\r`;
     console.log(command);
     writer.write(textEncoder.encode(command));
-    await sleep(100);
+    await sleep(130);
 
     command = `sweep cw ${frequency*frequencyMag}\r`;
     console.log(command);
     writer.write(textEncoder.encode(command));
-    await sleep(100);
+    await sleep(130);
 
-    command = `${sweeptimeCommand} ${sweeptimeValue}m\r`; // TODO: needs to be configurable
+    command = `${sweeptimeCommand} ${sweeptimeValue}${sweeptimeUnit}\r`; // TODO: needs to be configurable
     console.log(command);
     writer.write(textEncoder.encode(command));
-    await sleep(100);
+    await sleep(130);
 
     command = `trigger ${triggerLevel}\r`; // TODO: needs to be configurable
     console.log(command);
@@ -234,12 +244,6 @@ return (
         setTriggerAndDecode(port);
       }}>Trigger&Decode</Button>
       <Button disabled={portState === undefined} onClick={async ()=>{
-      const writer = port.writable.getWriter();
-        
-      const command = `abort\r`;
-      console.log(command)
-      writer.write(textEncoder.encode(command));
-      writer.releaseLock();
 
       const localPort = port;
       port = undefined;
@@ -284,16 +288,28 @@ return (
       </Stack>
     </FormControl>
     <FormControl defaultValue="" >
-      <Label>Sweep time [ms]</Label>
-      <NumberInput
-        min={10}
-        max={5000}
-        disabled={portState !== undefined}
-        aria-label="Sweep time [ms]"
-        placeholder="Type a number…"
-        value={sweeptimeValue}
-        onChange={(_, val) => setSweeptimeValue(val)}
-      />
+      <Label>Sweep time</Label>
+
+      <Stack direction="row" >
+        <NumberInput
+          min={1}
+          max={5000}
+          disabled={portState !== undefined}
+          aria-label="Sweep time"
+          placeholder="Type a number…"
+          value={sweeptimeValue}
+          onChange={(_, val) => setSweeptimeValue(val)}
+        />
+        <Select
+          disabled={portState !== undefined}
+          value={sweeptimeUnit}
+          onChange={(event) => setSweeptimeUnit(event.target.value)}
+          sx={{ marginRight: '15px' }}
+        >
+          <MenuItem value={""}>sec</MenuItem>
+          <MenuItem value={"m"}>ms</MenuItem>
+        </Select>
+      </Stack>
     </FormControl>
     <FormControl defaultValue="" >
       <Label>Trigger level [dBm]</Label>
