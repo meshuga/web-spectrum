@@ -54,12 +54,86 @@ const concatUint8Arrays = (a, b) => { // a, b TypedArray of same type
   return c;
 };
 
-const detectPulses = (responses, stepMSecond) => {
-  return [];
+
+// Our precondition for the measurments is that transmision is quantized into slices of 1ms.
+// Usually, 1 is of length 240 us and 0 of 640 us, which leaves max gap of size 760 us.
+// Below approximations are set to allow for correct detection of signals while sweeping over long  
+const oneOOKwidth = 0.3; // [ms] equal or smaller is one, wider is zero
+const maxGap = 1; // [ms] max gap equal to typical OOK signal length
+
+const detectPulses = (responses, stepMSecond, triggerLevel) => {
+  const pulsePackages = []; // contains auto detected groups of bits;
+
+  // 0 - idle
+  // 1 - pulse
+  // 2 - gap
+  let currentState = 0;
+
+  let dataCounter;
+  let packageData;
+  let gapCounter;
+
+  for(let i=0; i< responses.length; i++) {
+    if (currentState === 0) {
+      if (responses[i] < triggerLevel) {
+        // it's idle state and idle state detected, continue
+        continue
+      } else {
+        // new data package detected, new pulse must be initiated and package must be established
+        currentState = 1;
+        dataCounter = 1;
+        packageData = [];
+      }
+    } else if (currentState === 1) {
+      if (responses[i] < triggerLevel) {
+        // no data received, it's a gap, can transform the peak into a bit
+        currentState = 2;
+        gapCounter = 1;
+        if (dataCounter * stepMSecond <= oneOOKwidth) {
+          // 1 bit detected, need to add to a package
+          packageData.push(1);
+        } else {
+          // 0 detected, need to add to a package
+          packageData.push(0);
+        }
+      } else {
+        // we are still detecting a pulse, need to count the puse
+        dataCounter++;
+      }
+    } else if (currentState === 2) {
+      // gap detected, can continue gap, end transmission or detect new signal
+      if (responses[i] < triggerLevel) {
+        // no data received
+        if (gapCounter * stepMSecond > maxGap) {
+          // max gap exceeded with no new signal, end of transmission
+          currentState = 0;
+          pulsePackages.push(packageData);
+        } else {
+          // still in gap period
+          gapCounter++;
+        }
+      } else {
+        // we detected a new pulse
+        currentState = 1;
+        dataCounter = 0;
+      }
+    } else {
+      console.warn("Unknown state, decoding logic is broken")
+      break
+    }
+  }
+
+  console.log("Found unfinished package in state: ", currentState, ", data: ", packageData)
+
+  return pulsePackages;
 };
 
-const decodePulseGroups = (responses, stepMSecond) => {
-  return [];
+const decodePulseGroups = (pulsePackages) => {
+  // remove leading zero from package
+  for (let i=0; i< pulsePackages.length; i++) {
+    pulsePackages[i].shift();
+  }
+  return pulsePackages;
 };
 
 // eslint-disable-next-line no-extend-native
@@ -150,8 +224,8 @@ function Decoder() {
                   setPowerLevels(responses);
                   setXPoints(respXPoints);
 
-                  let pulseGroups = detectPulses(responses, stepMSecond);
-                  let decodedMessages = (pulseGroups);
+                  let pulsePackages = detectPulses(responses, stepMSecond, triggerLevel);
+                  let decodedMessages = decodePulseGroups(pulsePackages);
 
                   console.log(decodedMessages);
                 }
