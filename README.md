@@ -1,6 +1,5 @@
 # web-spectrum
 Web app for spectrum analyzers.
-![spectrum ](spectrum.gif)
 
 Visit [meshuga.github.io/web-spectrum](https://meshuga.github.io/web-spectrum/) to access the app.
 
@@ -19,12 +18,21 @@ Supported environments:
 See more: [caniuse.com/web-serial](https://caniuse.com/web-serial)
 
 ## Spectrum analyzer
+![spectrum ](spectrum.gif)
+
+Spectrum analyzer allows for showing available spectrum for requested frequencies.
 
 ## Data decoding
 
 ![decode](decode.jpg)
 
 Data decode sets a trigger and upon detection of a signal, the device captures it for decoding purposes.
+
+## References
+
+YT videos with explanations and tests:
+* ![Web (r)evolution in lab electronics? Building a Web Spectrum Analyzer for TinySA Ultra](https://www.youtube.com/watch?v=XeK0TL0F8DI&t=7s&ab_channel=PatrickonEngineering)
+* ![Signal decoding with TinySA Ultra](https://www.youtube.com/watch?v=bqgmftWSKPc&t=9s&ab_channel=PatrickonEngineering)
 
 ## Development
 
