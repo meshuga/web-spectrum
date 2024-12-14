@@ -31,8 +31,8 @@ Data decode sets a trigger and upon detection of a signal, the device captures i
 ## References
 
 YT videos with explanations and tests:
-* ![Web (r)evolution in lab electronics? Building a Web Spectrum Analyzer for TinySA Ultra](https://www.youtube.com/watch?v=XeK0TL0F8DI&t=7s&ab_channel=PatrickonEngineering)
-* ![Signal decoding with TinySA Ultra](https://www.youtube.com/watch?v=bqgmftWSKPc&t=9s&ab_channel=PatrickonEngineering)
+* [Web (r)evolution in lab electronics? Building a Web Spectrum Analyzer for TinySA Ultra](https://www.youtube.com/watch?v=XeK0TL0F8DI&t=7s&ab_channel=PatrickonEngineering)
+* [Signal decoding with TinySA Ultra](https://www.youtube.com/watch?v=bqgmftWSKPc&t=9s&ab_channel=PatrickonEngineering)
 
 ## Development
 
