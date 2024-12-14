@@ -48,7 +48,7 @@ const width = 1024;
 
 const sweeptimeCommand = 'sweeptime';
 const sweeptimeUsage = `${sweeptimeCommand} 0.003..60`;
-const getDataCommand = 'data 1';
+const getDataCommand = 'data 0';
 const prompt = 'ch> ';
 const newlineResp = '\r\n';
 const respNumberPart = textEncoder.encode('e+0')
