@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import { useFormControlContext } from '@mui/base/FormControl';
 import { styled } from '@mui/system';
 
-const Label = styled(({ children, className }) => {
+const Label = styled(({ children, className }: any) => {
   const formControlContext = useFormControlContext();
   const [dirty, setDirty] = React.useState(false);
 

@@ -13,8 +13,8 @@ import Select from '@mui/material/Select';
 
 import Stack from '@mui/system/Stack';
 
-import Label from '../components/Label';
-import NumberInput from '../components/NumberInput';
+import Label from '../components/Label.tsx';
+import NumberInput from '../components/NumberInput.tsx';
 
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';

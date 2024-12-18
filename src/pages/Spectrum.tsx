@@ -14,8 +14,8 @@ import Select from '@mui/material/Select';
 
 import Stack from '@mui/system/Stack';
 
-import Label from '../components/Label';
-import NumberInput from '../components/NumberInput';
+import Label from '../components/Label.tsx';
+import NumberInput from '../components/NumberInput.tsx';
 
 function downloadFile(fileName, urlData) {
   var aLink = document.createElement('a');
@@ -41,7 +41,7 @@ const respDelimeter = [125, 123]; // }{
 
 let port, reader;
 
-function concatUint8Arrays(a, b) { // a, b TypedArray of same type
+function concatUint8Arrays(a: Uint8Array, b: Uint8Array): Uint8Array { // a, b TypedArray of same type
   var c = new Uint8Array(a.length + b.length);
   c.set(a, 0);
   c.set(b, a.length);
@@ -49,7 +49,7 @@ function concatUint8Arrays(a, b) { // a, b TypedArray of same type
 }
 
 // eslint-disable-next-line no-extend-native
-Uint8Array.prototype.indexOfMulti = function(searchElements, fromIndex) {
+(Uint8Array.prototype as any).indexOfMulti = function(searchElements, fromIndex) {
   fromIndex = fromIndex || 0;
 
   var index = Array.prototype.indexOf.call(this, searchElements[0], fromIndex);
@@ -84,7 +84,7 @@ const formatFrequency = (freq) => {
 const heatmap = ["05000b", "05000b", "0a000a", "0a000a", "0e000f", "0e000f", "130014", "130014", "190018", "190018", "1e001e", "1e001e", "230022", "230022", "290029", "290029", "2e002e", "2e002e", "320033", "320033", "370037", "370037", "3d003d", "3d003d", "450046", "450046", "4e014e", "4e014e", "560157", "560157", "5f005e", "5f005e", "670167", "670167", "6f0070", "6f0070", "780179", "780179", "81017b", "81017b", "870278", "870278", "8d0272", "8d0272", "94036c", "94036c", "9a0467", "9a0467", "a00560", "a00560", "a8065a", "a8065a", "ad0753", "ad0753", "b4084d", "b4084d", "bb0a47", "bb0a47", "c10a40", "c10a40", "c60b38", "c60b38", "cc0c33", "cc0c33", "d30e2c", "d30e2c", "d90d26", "d90d26", "df0f1f", "df0f1f", "e61019", "e61019", "ec1213", "ec1213", "f3120d", "f3120d", "f91306", "f91306", "fc1601", "fc1601", "fe2000", "fe2000", "ff2a01", "ff2a01", "ff3501", "ff3501", "ff3f00", "ff3f00", "ff4b01", "ff4b01", "ff5500", "ff5500", "ff5f01", "ff5f01", "ff6901", "ff6901", "ff7300", "ff7300", "ff7f00", "ff7f00", "ff8901", "ff8901", "ff9400", "ff9400", "ff9f01", "ff9f01", "ffa900", "ffa900", "ffb401", "ffb401", "ffbd02", "ffbd02", "ffc303", "ffc303", "ffc704", "ffc704", "ffcb06", "ffcb06", "ffd009", "ffd009", "ffd30a", "ffd30a", "ffd70d", "ffd70d", "ffdb0d", "ffdb0d", "ffdf10", "ffdf10", "fee310", "fee310", "ffe713", "ffe713", "ffec15", "ffec15", "ffef17", "ffef17", "fff319", "fff319", "fff61b", "fff61b", "fffb1d", "fffb1d", "feff20", "feff20", "f9fb1f", "f9fb1f", "f3f71f", "f3f71f", "eff41f", "eff41f", "eaf01f", "eaf01f", "e5ed20", "e5ed20", "dee920", "dee920", "dae720", "dae720", "d5e320", "d5e320", "cfdf20", "cfdf20", "cbdc21", "cbdc21", "c5d720", "c5d720", "c1d521", "c1d521", "bad020", "bad020", "b5cd21", "b5cd21", "afc920", "afc920", "abc621", "abc621", "a6c220", "a6c220", "a1c021", "a1c021", "9bbc20", "9bbc20", "96b823", "96b823", "93b82a", "93b82a", "91b932", "91b932", "8ebb3c", "8ebb3c", "8bbb43", "8bbb43", "8abc4c", "8abc4c", "88bd54", "88bd54", "85bd5c", "85bd5c", "83be64", "83be64", "80bf6e", "80bf6e", "7dbf75", "7dbf75", "7bc07e", "7bc07e", "7ac187", "7ac187", "78c290", "78c290", "75c298", "75c298", "72c4a1", "72c4a1", "70c5aa", "70c5aa", "6ec4b2", "6ec4b2", "6cc5ba", "6cc5ba", "6ac7c3", "6ac7c3", "6ac6c6", "6ac6c6", "72cbcd", "72cbcd", "7aced1", "7aced1", "83d1d5", "83d1d5", "8ed5d7", "8ed5d7", "97d8da", "97d8da", "a0dcdd", "a0dcdd", "a9dfe1", "a9dfe1", "b3e3e5", "b3e3e5", "bee7e9", "bee7e9", "c6e9eb", "c6e9eb", "d0eef0", "d0eef0", "d9f1f3", "d9f1f3", "e3f5f7", "e3f5f7", "edf9fa", "edf9fa", "f6fcfd", "f6fcfd", "fdffff", "fdffff"],
 moveBy = 1;
 
-let latestPowerPoints = [];
+let latestPowerPoints: Array<Array<Number>> = [];
 
 function Spectrum() {
   const [portState, setPort] = useState(undefined);
@@ -94,7 +94,7 @@ function Spectrum() {
   const [stopFrequencyMag, setStopFrequencyMag] =   useState(1000000);
   const [points, setPoints] = useState(500);
   const [powerLevels, setPowerLevels] = useState([]);
-  const [powerPoints, setPowerPoints] = useState([]);
+  const [powerPoints, setPowerPoints] = useState<Array<Array<Number>>>([]);
 
   useEffect(() => {
     latestPowerPoints = powerPoints;
@@ -102,7 +102,7 @@ function Spectrum() {
 
   const [currLvl, setCurrLvl] = useState("N/A");
 
-  const xPoints = [];
+  const xPoints: Array<Number> = [];
   const span = (stopFrequency*stopFrequencyMag - startFrequency*startFrequencyMag) / points;
   for(let i=0;i<points; i++) {
     xPoints.push(startFrequency*startFrequencyMag + span * i);
@@ -114,8 +114,8 @@ function Spectrum() {
     setPowerLevels([]);
     setPowerPoints([]);
 
-    const canvas = document.getElementById("canvas"),
-    canvasContext = canvas.getContext("2d");
+    const canvas = document.getElementById("canvas") as HTMLCanvasElement,
+    canvasContext = canvas.getContext("2d") as CanvasRenderingContext2D;
     canvasContext.clearRect(0, 0, canvas.width, canvas.height);
   };
   const download = () => {
@@ -129,7 +129,7 @@ function Spectrum() {
 
   const drawLines = (powers) => {
     // min 90, mx 10, add case for values higher 
-    let powerLevels = []
+    let powerLevels: Array<Number> = []
     for(let i=0; i<powers.length; i++) {
       if(powers[i] <= -100) {
         powerLevels.push(0);
@@ -143,12 +143,12 @@ function Spectrum() {
       }
     }
     setPowerLevels(powers);
-    const canvas = document.getElementById("canvas"),
-    canvasContext = canvas.getContext("2d");
+    const canvas = document.getElementById("canvas") as HTMLCanvasElement,
+    canvasContext = canvas.getContext("2d") as CanvasRenderingContext2D;
     canvasContext.drawImage(canvasContext.canvas, 0, 0, width, height - moveBy, 0, moveBy, width, height - moveBy);
     for(var i = 0; i < powerLevels.length; i++) {
       var mag = powerLevels[i];
-      canvasContext.fillStyle = '#'+heatmap[mag];
+      canvasContext.fillStyle = '#'+heatmap[mag as any];
       const pointVals = Math.floor(width/points);
       for(let j=0;j<pointVals; j++) {
         canvasContext.fillRect(i*pointVals+j, 0, 1, moveBy);
@@ -157,7 +157,7 @@ function Spectrum() {
   };
 
   const processResponse = (response) => {
-    const powers = []
+    const powers: Array<Number> = []
     for(let i=0; i<points; i++) {
       const x_char = response[3 * i]  // This should be 'x'
       if(x_char !== xAscii) {
@@ -178,7 +178,7 @@ function Spectrum() {
     setPowerPoints([...latestPowerPoints, powers])
   }
 
-  let responseBuffer = new Int8Array([]);
+  let responseBuffer: Uint8Array = new Uint8Array([]);
 
   const readLoop = async () => {
     const writer = port.writable.getWriter();
@@ -208,9 +208,9 @@ function Spectrum() {
             let opening = -1, closing = -1;
 
             do {
-              opening = responseBuffer.indexOfMulti(respDelimeter);
+              opening = (responseBuffer as any).indexOfMulti(respDelimeter);
               if(opening !== -1) {
-                closing = responseBuffer.indexOfMulti(respDelimeter, opening+2);
+                closing = (responseBuffer as any).indexOfMulti(respDelimeter, opening+2);
                 if(closing !== -1) {
                   if (closing - opening - 2 !== points * 3) {
                     console.warn("Incorrect response size: " + (closing - opening - 2) + ". Should be: " + (points * 3))

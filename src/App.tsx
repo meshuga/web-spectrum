@@ -22,8 +22,9 @@ import Typography from '@mui/material/Typography';
 import Breadcrumbs, { breadcrumbsClasses } from '@mui/material/Breadcrumbs';
 import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
 
-import Spectrum from './pages/Spectrum';
-import Decoder from './pages/Decoder';
+import Spectrum from './pages/Spectrum.tsx';
+import Decoder from './pages/Decoder.tsx';
+import RtlDecoder from './pages/RtlDecoder.tsx';
 
 const darkTheme = createTheme({
   palette: {
@@ -47,7 +48,7 @@ const Drawer = styled(MuiDrawer)({
 const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
   margin: theme.spacing(1, 0),
   [`& .${breadcrumbsClasses.separator}`]: {
-    color: (theme.vars || theme).palette.action.disabled,
+    color: ((theme as any).vars || theme).palette.action.disabled,
     margin: 1,
   },
   [`& .${breadcrumbsClasses.ol}`]: {
@@ -58,6 +59,7 @@ const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
 const mainListItems = [
   { text: 'Spectrum', icon: <EqualizerIcon /> },
   { text: 'Decode', icon: <TroubleshootIcon /> },
+  { text: 'RTL-SDR Decode', icon: <TroubleshootIcon /> },
 ];
 
 function App() {
@@ -129,7 +131,7 @@ return (
               </Typography>
             </StyledBreadcrumbs>
           </Stack>
-          { menuSelection == 0 ? <Spectrum /> : <Decoder /> }          
+          { menuSelection === 0 ? <Spectrum /> : (menuSelection === 1 ? <Decoder /> : <RtlDecoder />) }          
         </Stack>
       </Box>
     </Box>
