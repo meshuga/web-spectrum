@@ -18,7 +18,7 @@ export interface SampleReceiver {
   setSampleRate(sampleRate: number): void;
 
   /** Receives samples that should be demodulated. */
-  receiveSamples(I: Float32Array, Q: Float32Array, frequency: number): void;
+  receiveSamples(frequency: number, data: ArrayBuffer): void;
 
   /** Sets a sample receiver to be executed right after this one. */
   andThen(next: SampleReceiver): SampleReceiver;
@@ -51,9 +51,9 @@ class ReceiverSequence implements SampleReceiver {
     }
   }
 
-  receiveSamples(I: Float32Array, Q: Float32Array, frequency: number): void {
+  receiveSamples(frequency: number, data: ArrayBuffer): void {
     for (let receiver of this.receivers) {
-      receiver.receiveSamples(I, Q, frequency);
+      receiver.receiveSamples(frequency, data);
     }
   }
 
@@ -67,8 +67,8 @@ export class LoggingReceiver implements SampleReceiver {
     console.log("setSampleRate", sampleRate);
   }
 
-  receiveSamples(I: Float32Array, Q: Float32Array, frequency: number): void {
-    console.log(arguments);
+  receiveSamples(frequency: number, data: ArrayBuffer): void {
+    console.log(data, frequency);
   }
 
   andThen(next: SampleReceiver): SampleReceiver {

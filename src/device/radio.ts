@@ -60,13 +60,13 @@ export class Radio extends EventTarget {
     super();
     this.state = State.OFF;
     this.channel = new Channel<Message>();
-    this.frequencyCorrection = 0;
+    this.frequencyCorrection = 0.5;
     this.gain = null;
     this.frequency = 88500000;
     this.directSamplingMethod = DirectSampling.Off;
     this.biasTeeEnabled = false;
     this.runLoop();
-    this.sampleRate = 1024000;
+    this.sampleRate = 2000000;
   }
 
   /** Current state. */
@@ -292,11 +292,9 @@ class Transfers {
     private radio: Radio,
     private sampleRate: number
   ) {
-    this.samplesPerBuf =
-      512 * Math.ceil(sampleRate / Transfers.BUFS_PER_SEC / 512);
+    this.samplesPerBuf = 128000;
     this.buffersWanted = 0;
     this.buffersRunning = 0;
-    this.iqConverter = new U8ToFloat32(this.samplesPerBuf);
     this.directSampling = false;
     this.stopCallback = Transfers.nilCallback;
   }
@@ -339,17 +337,7 @@ class Transfers {
     try {
       while (this.buffersRunning <= this.buffersWanted) {
         const b = await this.rtl.readSamples(this.samplesPerBuf);
-        let [I, Q] = this.iqConverter.convert(b.data);
-        this.sampleReceiver.receiveSamples(I, Q, b.frequency);
-        if (this.directSampling != b.directSampling) {
-          this.directSampling = b.directSampling;
-          this.radio.dispatchEvent(
-            new RadioEvent({
-              type: "directSampling",
-              active: this.directSampling,
-            })
-          );
-        }
+        this.sampleReceiver.receiveSamples(b.frequency, b.data);
       }
     } catch (e) {
       let error = new RadioError(
