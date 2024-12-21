@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import { Demodulator } from '../protocol/ads-b-demodulator.js'
+
 /** Interface for classes that get samples from a Radio class. */
 export interface SampleReceiver {
   /** Sets the sample rate. */
@@ -63,12 +65,19 @@ class ReceiverSequence implements SampleReceiver {
 }
 
 export class LoggingReceiver implements SampleReceiver {
+  constructor(private demodulator: Demodulator) {
+    this.demodulator = new Demodulator();
+  }
+
   setSampleRate(sampleRate: number): void {
     console.log("setSampleRate", sampleRate);
   }
 
   receiveSamples(frequency: number, data: ArrayBuffer): void {
-    console.log(data, frequency);
+    const samples = new Uint8Array(data);
+    this.demodulator.process(samples, samples, (msg) => {
+      console.log(msg);
+    });
   }
 
   andThen(next: SampleReceiver): SampleReceiver {
