@@ -9,13 +9,14 @@ The application has two features:
 
 Supported devices:
 * tinySA Ultra
+* RTL-SDR v4
 
 Supported environments:
 * Chrome
 * Edge
 * Opera
 
-See more: [caniuse.com/web-serial](https://caniuse.com/web-serial)
+See more: [caniuse.com/web-serial](https://caniuse.com/web-serial), [caniuse.com/webusb](https://caniuse.com/webusb)
 
 ## Spectrum analyzer
 ![spectrum ](spectrum.gif)
@@ -31,8 +32,8 @@ Data decode sets a trigger and upon detection of a signal, the device captures i
 ## References
 
 YT videos with explanations and tests:
-* [Web (r)evolution in lab electronics? Building a Web Spectrum Analyzer for TinySA Ultra](https://www.youtube.com/watch?v=XeK0TL0F8DI&t=7s&ab_channel=PatrickonEngineering)
-* [Signal decoding with TinySA Ultra](https://www.youtube.com/watch?v=bqgmftWSKPc&t=9s&ab_channel=PatrickonEngineering)
+* [Web (r)evolution in lab electronics? Building a Web Spectrum Analyzer for TinySA Ultra](https://www.youtube.com/watch?v=XeK0TL0F8DI)
+* [Signal decoding with TinySA Ultra](https://www.youtube.com/watch?v=bqgmftWSKPc)
 
 ## Development
 

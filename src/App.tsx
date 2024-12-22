@@ -32,6 +32,8 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import Divider from '@mui/material/Divider';
+
 
 import TroubleshootIcon from '@mui/icons-material/Troubleshoot';
 import EqualizerIcon from '@mui/icons-material/Equalizer';
@@ -75,13 +77,15 @@ const StyledBreadcrumbs = styled(Breadcrumbs)(({ theme }) => ({
 }));
 
 const mainListItems = [
+  { group: 'TinySA Ultra'},
   { text: 'Spectrum', icon: <EqualizerIcon /> },
   { text: 'Decode', icon: <TroubleshootIcon /> },
-  { text: 'RTL-SDR Decode', icon: <TroubleshootIcon /> },
+  { group: 'RTL-SDR'},
+  { text: 'Decode', icon: <TroubleshootIcon /> },
 ];
 
 function App() {
-  const [menuSelection, setMenuSelection] = useState(0);
+  const [menuSelection, setMenuSelection] = useState(1);
 
 return (
   <ThemeProvider theme={darkTheme}>
@@ -100,10 +104,12 @@ return (
           <List dense>
             {mainListItems.map((item, index) => (
               <ListItem key={index} disablePadding sx={{ display: 'block' }}>
-                <ListItemButton selected={index === menuSelection} onClick={() => setMenuSelection(index)}>
-                  <ListItemIcon>{item.icon}</ListItemIcon>
-                  <ListItemText primary={item.text} />
-                </ListItemButton>
+                {item.group === undefined ?
+                  <ListItemButton selected={index === menuSelection} onClick={() => setMenuSelection(index)}>
+                    <ListItemIcon>{item.icon}</ListItemIcon>
+                    <ListItemText primary={item.text} />
+                  </ListItemButton>
+                : <><b>{item.group}</b><Divider /></>}
               </ListItem>
             ))}
           </List>
@@ -144,12 +150,13 @@ return (
               separator={<NavigateNextRoundedIcon fontSize="small" />}
             >
               <Typography variant="body1">Web Spectrum</Typography>
+              <Typography variant="body1">{menuSelection < 3 ? 'TinySA Ultra' : 'RTL-SDR'}</Typography>
               <Typography variant="body1" sx={{ color: 'text.primary', fontWeight: 600 }}>
                 {mainListItems[menuSelection].text}
               </Typography>
             </StyledBreadcrumbs>
           </Stack>
-          { menuSelection === 0 ? <Spectrum /> : (menuSelection === 1 ? <Decoder /> : <RtlDecoder />) }          
+          { menuSelection === 1 ? <Spectrum /> : (menuSelection === 2 ? <Decoder /> : <RtlDecoder />) }          
         </Stack>
       </Box>
     </Box>
