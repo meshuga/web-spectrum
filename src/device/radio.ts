@@ -62,7 +62,6 @@ export class Radio extends EventTarget {
     this.channel = new Channel<Message>();
     this.frequencyCorrection = 0.5;
     this.gain = null;
-    this.frequency = 88500000;
     this.directSamplingMethod = DirectSampling.Off;
     this.biasTeeEnabled = false;
     this.runLoop();
@@ -310,12 +309,14 @@ class Transfers {
 
   /** Starts the transfers as a stream. */
   async startStream() {
+    console.log("startStream")
+    // debugger;
     this.sampleReceiver.setSampleRate(this.sampleRate);
     await this.rtl.resetBuffer();
     this.buffersWanted = Transfers.PARALLEL_BUFFERS;
     while (this.buffersRunning < this.buffersWanted) {
       ++this.buffersRunning;
-      this.readStream();
+      await this.readStream();
     }
   }
 

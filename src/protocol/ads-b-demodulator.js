@@ -6,7 +6,7 @@ import {
     msgLen,
     LONG_MSG_BITS as long_msg_bits,
     SHORT_MSG_BITS as short_msg_bits,
-} from "./mode-s-msglen.js";
+} from "./ads-b-mode-s-msglen.js";
 
 const PREAMBLE_US = 8; // microseconds
 const FULL_LEN = PREAMBLE_US + long_msg_bits;

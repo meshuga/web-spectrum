@@ -41,14 +41,17 @@ return (
       <Stack spacing={2} sx={{ marginRight: '30px' }}>
         <ButtonGroup variant="contained" aria-label="Basic button group">
         <Button  onClick={ async () => {
+          const freqHz = frequency*frequencyMag;
+          console.log("frequency to be set", freqHz);
             if (radio === undefined) {
               const rtlProvider = new RTL2832U_Provider();
               const rtlRadio = new Radio(rtlProvider, new LoggingReceiver())
-              rtlRadio.setFrequency(frequency*frequencyMag);
+              rtlRadio.setFrequency(freqHz);
+              rtlRadio.setGain(40);
               rtlRadio.start();
               setRadio(rtlRadio);
             } else {
-              radio.setFrequency(frequency*frequencyMag);
+              radio.setFrequency(freqHz);
               radio.start();
             }
       }}>Trigger&Decode</Button>
