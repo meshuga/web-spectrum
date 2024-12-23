@@ -1,12 +1,11 @@
-"use strict";
 // source: https://github.com/watson/mode-s-demodulator
-import { Decoder, UNIT_FEET, UNIT_METERS } from "./ads-b-decoder.js";
+import { Decoder, UNIT_FEET, UNIT_METERS } from "./decoder.js";
 
 import {
     msgLen,
     LONG_MSG_BITS as long_msg_bits,
     SHORT_MSG_BITS as short_msg_bits,
-} from "./ads-b-mode-s-msglen.js";
+} from "./mode-s-msglen.js";
 
 const PREAMBLE_US = 8; // microseconds
 const FULL_LEN = PREAMBLE_US + long_msg_bits;

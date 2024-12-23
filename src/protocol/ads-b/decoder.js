@@ -1,8 +1,6 @@
-"use strict";
-
 // source: https://github.com/watson/mode-s-decoder
 
-import { msgLen, LONG_MSG_BITS as long_msg_bits } from "./ads-b-mode-s-msglen.js";
+import { msgLen, LONG_MSG_BITS as long_msg_bits } from "./mode-s-msglen.js";
 
 const LONG_MSG_BYTES = long_msg_bits / 8;
 const ICAO_CACHE_LEN = 1024; // Power of two required

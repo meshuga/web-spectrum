@@ -45,8 +45,8 @@ import { LoggingReceiver } from '../device/sample_receiver.ts';
 
 let latestDecodedItems = [];
 
-function toHex(buffer) {
-  return Array.prototype.map.call(buffer, x => ('00' + x.toString(16)).slice(-2)).join('');
+const toHex = (buffer: Uint8Array) => {
+  return Array.prototype.map.call(buffer, (x: number) => ('00' + x.toString(16)).slice(-2)).join('');
 }
 
 function RtlDecoder() {
@@ -66,7 +66,7 @@ return (
       justifyContent="center"
       alignItems="center"
       minHeight="10vh"
-      sx={{ marginTop: '30px' }}>
+      sx={{ marginBottom: '30px' }}>
 
       <Stack spacing={2} sx={{ marginRight: '30px' }}>
         <ButtonGroup variant="contained" aria-label="Basic button group">

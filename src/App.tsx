@@ -45,6 +45,7 @@ import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
 import Spectrum from './pages/Spectrum.tsx';
 import Decoder from './pages/Decoder.tsx';
 import RtlDecoder from './pages/RtlDecoder.tsx';
+import { Button } from '@mui/material';
 
 const darkTheme = createTheme({
   palette: {
@@ -113,6 +114,25 @@ return (
               </ListItem>
             ))}
           </List>
+        </Stack>
+        <Stack
+        direction="row"
+        sx={{
+          p: 2,
+          gap: 1,
+          alignItems: 'center',
+          borderTop: '1px solid',
+          borderColor: 'divider',
+        }}
+        >
+          <Box sx={{ mr: 'auto' }}>
+            <Typography variant="h6" sx={{ fontWeight: 800 }}>
+              Web Spectrum
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+              <Button onClick={()=>window.open('https://github.com/meshuga/web-spectrum', '_blank')}>GitHub</Button>
+            </Typography>
+          </Box>
         </Stack>
       </Drawer>
 

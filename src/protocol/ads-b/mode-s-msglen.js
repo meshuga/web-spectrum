@@ -1,5 +1,3 @@
-"use strict";
-
 // source: https://github.com/watson/mode-s-msglen
 
 export const LONG_MSG_BITS = 112;

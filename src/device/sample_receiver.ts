@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { Demodulator } from '../protocol/ads-b-demodulator.js'
+import { Demodulator as AdsBDemodulator } from '../protocol/ads-b/demodulator.js'
 
 /** Interface for classes that get samples from a Radio class. */
 export interface SampleReceiver {
@@ -65,12 +65,12 @@ class ReceiverSequence implements SampleReceiver {
 }
 
 export class LoggingReceiver implements SampleReceiver {
-  private demodulator: Demodulator;
+  private adsBDemodulator: AdsBDemodulator;
   private onMsg;
 
   constructor(onMsg) {
     this.onMsg = onMsg;
-    this.demodulator = new Demodulator();
+    this.adsBDemodulator = new AdsBDemodulator();
   }
 
   setSampleRate(sampleRate: number): void {
@@ -80,7 +80,9 @@ export class LoggingReceiver implements SampleReceiver {
   receiveSamples(frequency: number, data: ArrayBuffer): void {
     const samples = new Uint8Array(data);
     console.log("got samples", samples.length);
-    this.demodulator.process(samples, 256000, (msg) => {
+
+    // for now we only have ADS-B demodulation
+    this.adsBDemodulator.process(samples, 256000, (msg) => {
       this.onMsg(msg);
     });
   }

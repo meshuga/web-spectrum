@@ -9,7 +9,7 @@ The application has two features:
 
 Supported devices:
 * tinySA Ultra
-* RTL-SDR v4
+* RTL-SDR with RTL2832U (includes V4)
 
 Supported environments:
 * Chrome
@@ -26,12 +26,12 @@ Spectrum analyzer allows for showing available spectrum for requested frequencie
 ## Data decoding
 Data decode sets a trigger and upon detection of a signal, the device captures it for decoding purposes.
 
-### TinySA Ultra decoding
+### TinySA Ultra
 ![decode](decode.jpg)
 
 The current implementation is able to decode 1 message at a given time of size around 24 bits.
 
-### RTL-SDR decoding
+### RTL-SDR
 ![decode](rtl-sdr-ads-b.jpg)
 
 The current implementation decodes ADS-B signals.
