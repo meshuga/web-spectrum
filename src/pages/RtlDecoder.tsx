@@ -43,10 +43,22 @@ import { RTL2832U_Provider } from "../device/rtlsdr/rtl2832u.ts";
 import { Radio } from '../device/radio.ts';
 import { LoggingReceiver } from '../device/sample_receiver.ts';
 
+let latestDecodedItems = [];
+
+function toHex(buffer) {
+  return Array.prototype.map.call(buffer, x => ('00' + x.toString(16)).slice(-2)).join('');
+}
+
 function RtlDecoder() {
   const [radio, setRadio] = useState<Radio>();
   const [frequency, setFrequency] = useState<number>(1090);
   const [frequencyMag, setFrequencyMag] = useState<number>(1000000);
+
+  const [decodedItems, setDecodedItems] = useState<any>([]);
+
+  useEffect(() => {
+    latestDecodedItems = decodedItems;
+  }, [decodedItems]);
 
 return (
   <Container maxWidth="lg">
@@ -63,7 +75,20 @@ return (
           console.log("frequency to be set", freqHz);
             if (radio === undefined) {
               const rtlProvider = new RTL2832U_Provider();
-              const rtlRadio = new Radio(rtlProvider, new LoggingReceiver())
+              const rtlRadio = new Radio(rtlProvider, new LoggingReceiver((msg) => {
+                console.log(msg);
+                const nonEmptyFields = {};
+                Object.keys(msg).forEach(field => {
+                  if (msg[field] && field !== 'msg') {
+                    nonEmptyFields[field] = msg[field];
+                  }
+                })
+                setDecodedItems([{
+                  time: new Date(),
+                  msg: msg.msg,
+                  decoded: JSON.stringify(nonEmptyFields)
+                }, ...latestDecodedItems]);
+              }))
               rtlRadio.setFrequency(freqHz);
               rtlRadio.setGain(40);
               rtlRadio.start();
@@ -72,7 +97,7 @@ return (
               radio.setFrequency(freqHz);
               radio.start();
             }
-      }}>Trigger&Decode</Button>
+      }}>Listen&Decode</Button>
       <Button onClick={async ()=>{
         await radio?.stop();
       }}>Disconnect</Button>
@@ -106,17 +131,31 @@ return (
     justifyContent='center'
   >
     <TableContainer component={Paper}>
-    <Table sx={{ minWidth: 650 }} aria-label="simple table">
+    <Table sx={{ minWidth: 850 }} aria-label="simple table">
       <TableHead>
         <TableRow>
+          <TableCell>Decoded</TableCell>
+          <TableCell>Time</TableCell>
           <TableCell>Data</TableCell>
-          <TableCell align="right">Time</TableCell>
-          <TableCell align="right">Frequency</TableCell>
-          <TableCell align="right">Sweep time</TableCell>
-          <TableCell align="right">Trigger level</TableCell>
         </TableRow>
       </TableHead>
       <TableBody>
+      {decodedItems.map((row, index) => (
+          <TableRow
+            key={index}
+            sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+          >
+            <TableCell sx={{'fontSize': 9}} component="th" scope="row">
+              {row.decoded}
+            </TableCell>
+            <TableCell component="th" scope="row">
+              {row.time.toISOString()}
+            </TableCell>
+            <TableCell component="th" scope="row">
+              {toHex(row.msg).replace(/0+$/, '')}
+            </TableCell>
+          </TableRow>
+        ))}
       </TableBody>
     </Table>
   </TableContainer>

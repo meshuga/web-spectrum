@@ -66,8 +66,10 @@ class ReceiverSequence implements SampleReceiver {
 
 export class LoggingReceiver implements SampleReceiver {
   private demodulator: Demodulator;
+  private onMsg;
 
-  constructor() {
+  constructor(onMsg) {
+    this.onMsg = onMsg;
     this.demodulator = new Demodulator();
   }
 
@@ -79,7 +81,7 @@ export class LoggingReceiver implements SampleReceiver {
     const samples = new Uint8Array(data);
     console.log("got samples", samples.length);
     this.demodulator.process(samples, 256000, (msg) => {
-      console.log(msg);
+      this.onMsg(msg);
     });
   }
 

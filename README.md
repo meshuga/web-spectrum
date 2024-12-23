@@ -26,6 +26,7 @@ Spectrum analyzer allows for showing available spectrum for requested frequencie
 ## Data decoding
 
 ![decode](decode.jpg)
+![decode](rtl-sdr-ads-b.jpg)
 
 Data decode sets a trigger and upon detection of a signal, the device captures it for decoding purposes.
 
