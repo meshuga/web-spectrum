@@ -24,11 +24,17 @@ See more: [caniuse.com/web-serial](https://caniuse.com/web-serial), [caniuse.com
 Spectrum analyzer allows for showing available spectrum for requested frequencies.
 
 ## Data decoding
+Data decode sets a trigger and upon detection of a signal, the device captures it for decoding purposes.
 
+### TinySA Ultra decoding
 ![decode](decode.jpg)
+
+The current implementation is able to decode 1 message at a given time of size around 24 bits.
+
+### RTL-SDR decoding
 ![decode](rtl-sdr-ads-b.jpg)
 
-Data decode sets a trigger and upon detection of a signal, the device captures it for decoding purposes.
+The current implementation decodes ADS-B signals.
 
 ## References
 

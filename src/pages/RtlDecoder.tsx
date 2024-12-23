@@ -70,7 +70,7 @@ return (
 
       <Stack spacing={2} sx={{ marginRight: '30px' }}>
         <ButtonGroup variant="contained" aria-label="Basic button group">
-        <Button  onClick={ async () => {
+        <Button disabled={radio?.isPlaying()} onClick={ async () => {
           const freqHz = frequency*frequencyMag;
           console.log("frequency to be set", freqHz);
             if (radio === undefined) {
@@ -98,7 +98,7 @@ return (
               radio.start();
             }
       }}>Listen&Decode</Button>
-      <Button onClick={async ()=>{
+      <Button disabled={radio === undefined || !radio.isPlaying()} onClick={async ()=>{
         await radio?.stop();
       }}>Disconnect</Button>
         </ButtonGroup>
@@ -131,12 +131,12 @@ return (
     justifyContent='center'
   >
     <TableContainer component={Paper}>
-    <Table sx={{ minWidth: 850 }} aria-label="simple table">
+    <Table size="small" aria-label="simple table">
       <TableHead>
         <TableRow>
-          <TableCell>Decoded</TableCell>
-          <TableCell>Time</TableCell>
-          <TableCell>Data</TableCell>
+          <TableCell width='60%'>Decoded</TableCell>
+          <TableCell width='20%'>Time</TableCell>
+          <TableCell width='20%'>Data</TableCell>
         </TableRow>
       </TableHead>
       <TableBody>
@@ -145,13 +145,13 @@ return (
             key={index}
             sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
           >
-            <TableCell sx={{'fontSize': 9}} component="th" scope="row">
+            <TableCell width='60%' sx={{'fontSize': 11, wordBreak: 'break-all'}} component="th" scope="row">
               {row.decoded}
             </TableCell>
-            <TableCell component="th" scope="row">
+            <TableCell width='20%' component="th" scope="row">
               {row.time.toISOString()}
             </TableCell>
-            <TableCell component="th" scope="row">
+            <TableCell width='20%' component="th" scope="row">
               {toHex(row.msg).replace(/0+$/, '')}
             </TableCell>
           </TableRow>
