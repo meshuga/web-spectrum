@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { Demodulator as AdsBDemodulator } from '../protocol/ads-b/demodulator.js'
+import { Demodulator as IsmDemodulator } from '../protocol/ism/demodulator.ts'
 
 /** Interface for classes that get samples from a Radio class. */
 export interface SampleReceiver {
@@ -66,11 +67,15 @@ class ReceiverSequence implements SampleReceiver {
 
 export class LoggingReceiver implements SampleReceiver {
   private adsBDemodulator: AdsBDemodulator;
+  private ismDemodulator: IsmDemodulator;
+  private protocol: string;
   private onMsg;
 
-  constructor(onMsg) {
+  constructor(protocol: string, onMsg) {
+    this.protocol = protocol;
     this.onMsg = onMsg;
     this.adsBDemodulator = new AdsBDemodulator();
+    this.ismDemodulator = new IsmDemodulator();
   }
 
   setSampleRate(sampleRate: number): void {
@@ -81,10 +86,33 @@ export class LoggingReceiver implements SampleReceiver {
     const samples = new Uint8Array(data);
     console.log("got samples", samples.length);
 
-    // for now we only have ADS-B demodulation
-    this.adsBDemodulator.process(samples, 256000, (msg) => {
-      this.onMsg(msg);
-    });
+
+    if (this.protocol === "adsb") {
+      // for now we only have ADS-B demodulation
+      this.adsBDemodulator.process(samples, 256000, (msg) => {
+        console.log(msg);
+        const nonEmptyFields = {};
+        Object.keys(msg).forEach(field => {
+          if (msg[field] && field !== 'msg') {
+            nonEmptyFields[field] = msg[field];
+          }
+        });
+        this.onMsg({
+          time: new Date(),
+          msg: msg.msg,
+          decoded: JSON.stringify(nonEmptyFields)
+        });
+      });
+    } else {
+      this.ismDemodulator.process(samples, 256000, (msg) => {
+        this.onMsg(msg);
+        // this.onMsg({
+        //   time: new Date(),
+        //   msg: msg.msg,
+        //   decoded: JSON.stringify(nonEmptyFields)
+        // });
+      });
+    }
   }
 
   andThen(next: SampleReceiver): SampleReceiver {

@@ -24,6 +24,8 @@ import Button from '@mui/material/Button';
 import ButtonGroup from '@mui/material/ButtonGroup';
 import { FormControl } from '@mui/base/FormControl';
 
+import { LineChart } from '@mui/x-charts/LineChart';
+
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 
@@ -43,22 +45,25 @@ import { RTL2832U_Provider } from "../device/rtlsdr/rtl2832u.ts";
 import { Radio } from '../device/radio.ts';
 import { LoggingReceiver } from '../device/sample_receiver.ts';
 
-let latestDecodedItems = [];
-
 const toHex = (buffer: Uint8Array) => {
   return Array.prototype.map.call(buffer, (x: number) => ('00' + x.toString(16)).slice(-2)).join('');
 }
 
 function RtlDecoder() {
   const [radio, setRadio] = useState<Radio>();
+  const [protocol, setProtocol] = useState<string>("adsb");
   const [frequency, setFrequency] = useState<number>(1090);
   const [frequencyMag, setFrequencyMag] = useState<number>(1000000);
 
   const [decodedItems, setDecodedItems] = useState<any>([]);
 
-  useEffect(() => {
-    latestDecodedItems = decodedItems;
-  }, [decodedItems]);
+  const [powerLevels, setPowerLevels] = useState([]);
+  // const [xPoints, setXPoints] = useState([]);
+
+  const xPoints: Array<number> = [];
+  for (let i = 0; i < 5000; i++) {
+    xPoints.push(i);
+  }
 
 return (
   <Container maxWidth="lg">
@@ -75,20 +80,21 @@ return (
           console.log("frequency to be set", freqHz);
             if (radio === undefined) {
               const rtlProvider = new RTL2832U_Provider();
-              const rtlRadio = new Radio(rtlProvider, new LoggingReceiver((msg) => {
-                console.log(msg);
-                const nonEmptyFields = {};
-                Object.keys(msg).forEach(field => {
-                  if (msg[field] && field !== 'msg') {
-                    nonEmptyFields[field] = msg[field];
-                  }
-                })
-                setDecodedItems([{
-                  time: new Date(),
-                  msg: msg.msg,
-                  decoded: JSON.stringify(nonEmptyFields)
-                }, ...latestDecodedItems]);
-              }))
+              const rtlRadio = new Radio(rtlProvider, new LoggingReceiver(protocol, (msg) => {
+                if (protocol === 'adsb') {
+                  setDecodedItems(prevDecodedItems => {
+                    return [msg, ...prevDecodedItems];
+                  });
+                } else {
+                  setPowerLevels(prevMsg => {
+                    if (prevMsg.length > 4000) {
+                      return msg;
+                    } else {
+                      return [...prevMsg, ...msg];
+                    }
+                  });
+                }
+              }));
               rtlRadio.setFrequency(freqHz);
               rtlRadio.setGain(40);
               rtlRadio.start();
@@ -103,6 +109,33 @@ return (
       }}>Disconnect</Button>
         </ButtonGroup>
       </Stack>
+
+      <FormControl defaultValue="" >
+      <Label>Protocol</Label>
+
+      <Stack direction="row" >
+        <Select
+          disabled={radio?.isPlaying()}
+          value={protocol}
+          onChange={(event) => {
+            setProtocol(event.target.value);
+            if (event.target.value === 'adsb') {
+              setFrequency(1090);
+              setFrequencyMag(1000000);
+            } else {
+              setFrequency(433);
+              setFrequencyMag(1000000);
+            }
+          }}
+          sx={{ marginRight: '15px' }}
+        >
+          <MenuItem value={"adsb"}>ADS-B</MenuItem>
+          <MenuItem disabled value={""}>ISM bands</MenuItem>
+          <MenuItem value={"gatetx24"}>GateTX (24bit)</MenuItem>
+        </Select>
+      </Stack>
+    </FormControl>
+
       <FormControl defaultValue="">
       <Label>Tested frequency [Hz]</Label>
       <Stack direction="row" >
@@ -130,6 +163,13 @@ return (
   <Box
     justifyContent='center'
   >
+    <LineChart
+      width={1100}
+      height={300}
+      slotProps={{ legend: { hidden: true } }}
+      series={[{ data: powerLevels, label: 'dB',  showMark: false, color: '#cc0052' }]}
+      xAxis={[{ data: xPoints}]}
+    />
     <TableContainer component={Paper}>
     <Table size="small" aria-label="simple table">
       <TableHead>

@@ -213,8 +213,6 @@ Uint8Array.prototype.endsWith = function(suffix) {
   return true;
 };
 
-let latestDecodedItems = [];
-
 function Decoder() {
   const [portState, setPort] = useState(undefined);
   const [frequency, setFrequency] = useState(433900);
@@ -227,11 +225,6 @@ function Decoder() {
   const [xPoints, setXPoints] = useState([]);
 
   const [decodedItems, setDecodedItems] = useState([]);
-
-  useEffect(() => {
-    latestDecodedItems = decodedItems;
-  }, [decodedItems]);
-
 
   const filters = [tinySAUltra];
 
@@ -282,13 +275,15 @@ function Decoder() {
 
                   console.log(decodedMessages)
 
-                  setDecodedItems([{
+                  setDecodedItems(prevDecodedItems => {
+                    return [{
                     data: decodedMessages,
                     time: new Date().toISOString(),
                     frequency: formatFrequency(frequency*frequencyMag),
                     sweeptime: sweeptime + (sweeptimeUnit === "" ? " s" : " ms"),
                     triggerLevel: triggerLevel + " dBm"
-                  }, ...latestDecodedItems]);
+                  }, ...prevDecodedItems];
+                });
 
                   // decoding logic completed, can arm trigger for more data
                   // await armTrigger();
