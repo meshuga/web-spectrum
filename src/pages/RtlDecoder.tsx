@@ -44,6 +44,7 @@ import Paper from '@mui/material/Paper';
 import { RTL2832U_Provider } from "../device/rtlsdr/rtl2832u.ts";
 import { Radio } from '../device/radio.ts';
 import { LoggingReceiver } from '../device/sample_receiver.ts';
+import { Demodulator as IsmDemodulator } from '../protocol/ism/demodulator.ts'
 
 const toHex = (buffer: Uint8Array) => {
   return Array.prototype.map.call(buffer, (x: number) => ('00' + x.toString(16)).slice(-2)).join('');
@@ -64,6 +65,8 @@ function RtlDecoder() {
   for (let i = 0; i < 5000; i++) {
     xPoints.push(i);
   }
+
+  const ismDemodulator = new IsmDemodulator();
 
 return (
   <Container maxWidth="lg">
@@ -88,6 +91,8 @@ return (
                 } else {
                   setPowerLevels(prevMsg => {
                     if (prevMsg.length > 4000) {
+                      const groups = ismDemodulator.detectPulses(prevMsg, 0.05, 10000);
+                      console.log(groups)
                       return msg;
                     } else {
                       return [...prevMsg, ...msg];

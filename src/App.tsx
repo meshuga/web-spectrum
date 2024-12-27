@@ -47,6 +47,38 @@ import Decoder from './pages/Decoder.tsx';
 import RtlDecoder from './pages/RtlDecoder.tsx';
 import { Button } from '@mui/material';
 
+// eslint-disable-next-line no-extend-native
+Uint8Array.prototype.indexOfMulti = function(searchElements, fromIndex) {
+  fromIndex = fromIndex || 0;
+
+  var index = Array.prototype.indexOf.call(this, searchElements[0], fromIndex);
+  if(searchElements.length === 1 || index === -1) {
+      // Not found or no other elements to check
+      return index;
+  }
+
+  for(var i = index, j = 0; j < searchElements.length && i < this.length; i++, j++) {
+      if(this[i] !== searchElements[j]) {
+          return this.indexOfMulti(searchElements, index + 1);
+      }
+  }
+
+  return(i === index + searchElements.length) ? index : -1;
+};
+
+// eslint-disable-next-line no-extend-native
+Uint8Array.prototype.endsWith = function(suffix) {
+  if(this.length<suffix.length) {
+    return false;
+  }
+  for(var i = this.length - suffix.length, j = 0; i < this.length; i++, j++) {
+      if(this[i] !== suffix[j]) {
+          return false;
+      }
+  }
+  return true;
+};
+
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',

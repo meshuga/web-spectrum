@@ -93,7 +93,6 @@ const formatFrequency = (freq) => {
   return freqStr;
 };
 
-
 // Our precondition for the measurments is that transmision is quantized into slices of 1ms.
 // Usually, 1 is of length 240 us and 0 of 640 us, which leaves max gap of size 760 us.
 // Below approximations are set to allow for correct detection of signals while sweeping over long  
@@ -179,38 +178,6 @@ const decodePulseGroups = (pulsePackages) => {
     responses.push(hexOutput);
   }
   return responses;
-};
-
-// eslint-disable-next-line no-extend-native
-Uint8Array.prototype.indexOfMulti = function(searchElements, fromIndex) {
-  fromIndex = fromIndex || 0;
-
-  var index = Array.prototype.indexOf.call(this, searchElements[0], fromIndex);
-  if(searchElements.length === 1 || index === -1) {
-      // Not found or no other elements to check
-      return index;
-  }
-
-  for(var i = index, j = 0; j < searchElements.length && i < this.length; i++, j++) {
-      if(this[i] !== searchElements[j]) {
-          return this.indexOfMulti(searchElements, index + 1);
-      }
-  }
-
-  return(i === index + searchElements.length) ? index : -1;
-};
-
-// eslint-disable-next-line no-extend-native
-Uint8Array.prototype.endsWith = function(suffix) {
-  if(this.length<suffix.length) {
-    return false;
-  }
-  for(var i = this.length - suffix.length, j = 0; i < this.length; i++, j++) {
-      if(this[i] !== suffix[j]) {
-          return false;
-      }
-  }
-  return true;
 };
 
 function Decoder() {
