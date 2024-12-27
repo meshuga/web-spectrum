@@ -142,7 +142,11 @@ export class Demodulator {
 
             const decimalOutput = parseInt(pulsePackages[i].join(""), 2);
             const hexOutput = decimalOutput.toString(16).toUpperCase();
-            responses.push(hexOutput);
+            responses.push({
+                time: new Date(),
+                msg: hexOutput,
+                decoded: hexOutput,
+              });
         }
         return responses;
     };

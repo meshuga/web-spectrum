@@ -92,7 +92,9 @@ return (
                   setPowerLevels(prevMsg => {
                     if (prevMsg.length > 4000) {
                       const groups = ismDemodulator.detectPulses(prevMsg, 0.05, 10000);
-                      console.log(groups)
+                      setDecodedItems(prevDecodedItems => {
+                        return [...groups, ...prevDecodedItems];
+                      });
                       return msg;
                     } else {
                       return [...prevMsg, ...msg];
