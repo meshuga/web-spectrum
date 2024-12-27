@@ -45,6 +45,7 @@ import { RTL2832U_Provider } from "../device/rtlsdr/rtl2832u.ts";
 import { Radio } from '../device/radio.ts';
 import { LoggingReceiver } from '../device/sample_receiver.ts';
 import { Demodulator as IsmDemodulator } from '../protocol/ism/demodulator.ts'
+import { Protocol } from '../protocol/protocol.ts'
 
 const toHex = (buffer: Uint8Array) => {
   return Array.prototype.map.call(buffer, (x: number) => ('00' + x.toString(16)).slice(-2)).join('');
@@ -52,17 +53,18 @@ const toHex = (buffer: Uint8Array) => {
 
 function RtlDecoder() {
   const [radio, setRadio] = useState<Radio>();
-  const [protocol, setProtocol] = useState<string>("adsb");
+  const [protocol, setProtocol] = useState<Protocol>(Protocol.ADSB);
   const [frequency, setFrequency] = useState<number>(1090);
   const [frequencyMag, setFrequencyMag] = useState<number>(1000000);
 
   const [decodedItems, setDecodedItems] = useState<any>([]);
 
   const [powerLevels, setPowerLevels] = useState([]);
-  // const [xPoints, setXPoints] = useState([]);
+
+  const pointsBatch = 10000;
 
   const xPoints: Array<number> = [];
-  for (let i = 0; i < 5000; i++) {
+  for (let i = 0; i < pointsBatch; i++) {
     xPoints.push(i);
   }
 
@@ -84,14 +86,14 @@ return (
             if (radio === undefined) {
               const rtlProvider = new RTL2832U_Provider();
               const rtlRadio = new Radio(rtlProvider, new LoggingReceiver(protocol, (msg) => {
-                if (protocol === 'adsb') {
+                if (protocol === Protocol.ADSB) {
                   setDecodedItems(prevDecodedItems => {
                     return [msg, ...prevDecodedItems];
                   });
                 } else {
                   setPowerLevels(prevMsg => {
-                    if (prevMsg.length > 4000) {
-                      const groups = ismDemodulator.detectPulses(prevMsg, 0.05, 10000);
+                    if (prevMsg.length > pointsBatch-1000) {
+                      const groups = ismDemodulator.detectPulses(protocol, prevMsg, 0.050, 10000);
                       setDecodedItems(prevDecodedItems => {
                         return [...groups, ...prevDecodedItems];
                       });
@@ -126,7 +128,7 @@ return (
           value={protocol}
           onChange={(event) => {
             setProtocol(event.target.value);
-            if (event.target.value === 'adsb') {
+            if (event.target.value === Protocol.ADSB) {
               setFrequency(1090);
               setFrequencyMag(1000000);
             } else {
@@ -136,9 +138,9 @@ return (
           }}
           sx={{ marginRight: '15px' }}
         >
-          <MenuItem value={"adsb"}>ADS-B</MenuItem>
+          <MenuItem value={Protocol.ADSB}>ADS-B</MenuItem>
           <MenuItem disabled value={""}>ISM bands</MenuItem>
-          <MenuItem value={"gatetx24"}>GateTX (24bit)</MenuItem>
+          <MenuItem value={Protocol.GateTX24}>GateTX (24bit)</MenuItem>
         </Select>
       </Stack>
     </FormControl>

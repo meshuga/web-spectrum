@@ -16,6 +16,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+import { Protocol, ProtocolToMsgLength } from "../protocol.ts";
+
 const MAG_LUT = new Uint16Array(129 * 129 * 2);
 
 // Populate the I/Q -> Magnitude lookup table. It is used because sqrt or
@@ -37,21 +39,24 @@ const oneOOKwidth = 0.3; // [ms] equal or smaller is one, wider is zero
 const maxGap = 1; // [ms] max gap equal to typical OOK signal length
 
 export class Demodulator {
+    constructor(private avgSamples: number = 128) {}
+
     private mag: Uint16Array;
 
     process(data, size, onMsg) {
         if (!this.mag) this.mag = new Uint16Array(size / 2);
         this.computeMagnitudeVector(data, size);
 
-        const k = new Uint16Array(1000);
-        for (let i = 0; i < 1000; i++) {
+        const totalSamples = size / 2;
+
+        const k = new Uint16Array(totalSamples/this.avgSamples);
+        for (let i = 0; i < totalSamples/this.avgSamples; i++) {
             let val = 0;
-            for (let j = 0; j < 128; j++) {
-                val += this.mag[i*128+j];
+            for (let j = 0; j < this.avgSamples; j++) {
+                val += this.mag[i*this.avgSamples+j];
             }
-            k[i] = val / 128;
+            k[i] = val / this.avgSamples;
         }
-        // debugger;
         onMsg(k);
     }
 
@@ -66,7 +71,9 @@ export class Demodulator {
         }
     };
 
-    detectPulses(responses, stepMSecond, triggerLevel) {
+    detectPulses(protocol: Protocol, responses: Array<number>, stepMSecond: number, triggerLevel: number) {
+        const expectedLength = ProtocolToMsgLength.get(protocol)!!;
+
         const pulsePackages: any = []; // contains auto detected groups of bits;
 
         // 0 - idle
@@ -130,15 +137,20 @@ export class Demodulator {
 
         console.log("Found unfinished package in state: ", currentState, ", data: ", packageData)
 
-        return this.decodePulseGroups(pulsePackages);
+        return this.decodePulseGroups(pulsePackages, expectedLength);
     };
 
-    private decodePulseGroups(pulsePackages) {
+    private decodePulseGroups(pulsePackages: Array<Array<number>>, expectedLength: number) {
         const responses: any = [];
         // remove leading zero from package
         for (let i=0; i< pulsePackages.length; i++) {
             // simple pre-abmle for GateTX type of a message (in Flipper nomenclature)
             pulsePackages[i].shift();
+
+            // the received message was incomplete, we skip message
+            if (pulsePackages[i].length !== expectedLength) {
+                continue
+            }
 
             const decimalOutput = parseInt(pulsePackages[i].join(""), 2);
             const hexOutput = decimalOutput.toString(16).toUpperCase();
