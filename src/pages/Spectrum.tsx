@@ -35,14 +35,7 @@ import Stack from '@mui/system/Stack';
 import Label from '../components/Label.tsx';
 import NumberInput from '../components/NumberInput.tsx';
 
-function downloadFile(fileName, urlData) {
-  var aLink = document.createElement('a');
-  aLink.download = fileName;
-  aLink.href = urlData;
-
-  var event = new MouseEvent('click');
-  aLink.dispatchEvent(event);
-}
+import { downloadFile } from '../utils/io.ts';
 
 const width = 1024,
 height = 500;

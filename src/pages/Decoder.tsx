@@ -42,17 +42,6 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
-function downloadFile(fileName, urlData) {
-  var aLink = document.createElement('a');
-  aLink.download = fileName;
-  aLink.href = urlData;
-
-  var event = new MouseEvent('click');
-  aLink.dispatchEvent(event);
-}
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 const tinySAUltra = { usbVendorId: 0x0483, usbProductId: 0x5740 }
 
 const portBaudRate = {};
@@ -194,11 +183,6 @@ function Decoder() {
   const [decodedItems, setDecodedItems] = useState([]);
 
   const filters = [tinySAUltra];
-
-  const download = () => {
-    let lines = ''
-    downloadFile(`spectrum-${new Date().toISOString()}.csv`, 'data:text/csv;charset=UTF-8,' + encodeURIComponent(lines));
-  };
 
   const readData = async () => {
     let responseBuffer = [];
@@ -365,7 +349,6 @@ return (
       }
       }}>Disconnect</Button>
         </ButtonGroup>
-        <Button onClick={download}>Download decoded data</Button>
       </Stack>
     <FormControl defaultValue="">
       <Label>Tested frequency [Hz]</Label>

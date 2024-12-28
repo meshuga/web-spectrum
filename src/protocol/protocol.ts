@@ -21,6 +21,8 @@ export enum Protocol {
     GateTX24 = 'GATETX24',
 }
 
+export const isIsm = (proto: Protocol) => proto !== Protocol.ADSB;
+
 export const ProtocolToMsgLength: ReadonlyMap<Protocol, number> = new Map([
     [Protocol.ADSB, 120],
     [Protocol.GateTX24, 24],

@@ -45,7 +45,9 @@ import { RTL2832U_Provider } from "../device/rtlsdr/rtl2832u.ts";
 import { Radio } from '../device/radio.ts';
 import { LoggingReceiver } from '../device/sample_receiver.ts';
 import { Demodulator as IsmDemodulator } from '../protocol/ism/demodulator.ts'
-import { Protocol } from '../protocol/protocol.ts'
+import { Protocol, isIsm } from '../protocol/protocol.ts'
+
+import { downloadFile } from '../utils/io.ts';
 
 const toHex = (buffer: Uint8Array) => {
   return Array.prototype.map.call(buffer, (x: number) => ('00' + x.toString(16)).slice(-2)).join('');
@@ -69,6 +71,15 @@ function RtlDecoder() {
   }
 
   const ismDemodulator = new IsmDemodulator();
+
+  const download = () => {
+    let lines = 'decoded,time,msg'
+    for(let i=0; i<decodedItems.length; i++) {
+      lines += [decodedItems[i].decoded, decodedItems[i].time.toISOString(), decodedItems[i].msg].join(',');
+      lines += '\n';
+    }
+    downloadFile(`spectrum-${new Date().toISOString()}.csv`, 'data:text/csv;charset=UTF-8,' + encodeURIComponent(lines));
+  };
 
 return (
   <Container maxWidth="lg">
@@ -117,6 +128,7 @@ return (
         await radio?.stop();
       }}>Disconnect</Button>
         </ButtonGroup>
+        <Button onClick={download}>Download spectrum</Button>
       </Stack>
 
       <FormControl defaultValue="" >
@@ -172,13 +184,13 @@ return (
   <Box
     justifyContent='center'
   >
-    <LineChart
+    { isIsm(protocol) ? <LineChart
       width={1100}
       height={300}
       slotProps={{ legend: { hidden: true } }}
       series={[{ data: powerLevels, label: 'dB',  showMark: false, color: '#cc0052' }]}
       xAxis={[{ data: xPoints}]}
-    />
+    /> : null} 
     <TableContainer component={Paper}>
     <Table size="small" aria-label="simple table">
       <TableHead>
