@@ -42,6 +42,10 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
+import { Demodulator as IsmDemodulator } from '../protocol/ism/demodulator.ts'
+import { Protocol } from '../protocol/protocol.ts'
+import { sleep } from '../utils/io.ts';
+
 const tinySAUltra = { usbVendorId: 0x0483, usbProductId: 0x5740 }
 
 const portBaudRate = {};
@@ -82,93 +86,6 @@ const formatFrequency = (freq) => {
   return freqStr;
 };
 
-// Our precondition for the measurments is that transmision is quantized into slices of 1ms.
-// Usually, 1 is of length 240 us and 0 of 640 us, which leaves max gap of size 760 us.
-// Below approximations are set to allow for correct detection of signals while sweeping over long  
-const oneOOKwidth = 0.3; // [ms] equal or smaller is one, wider is zero
-const maxGap = 1; // [ms] max gap equal to typical OOK signal length
-
-const detectPulses = (responses, stepMSecond, triggerLevel) => {
-  const pulsePackages = []; // contains auto detected groups of bits;
-
-  // 0 - idle
-  // 1 - pulse
-  // 2 - gap
-  let currentState = 0;
-
-  let dataCounter;
-  let packageData;
-  let gapCounter;
-
-  for(let i=0; i< responses.length; i++) {
-    if (currentState === 0) {
-      if (responses[i] < triggerLevel) {
-        // it's idle state and idle state detected, continue
-        continue
-      } else {
-        // new data package detected, new pulse must be initiated and package must be established
-        currentState = 1;
-        dataCounter = 1;
-        packageData = [];
-      }
-    } else if (currentState === 1) {
-      if (responses[i] < triggerLevel) {
-        // no data received, it's a gap, can transform the peak into a bit
-        currentState = 2;
-        gapCounter = 1;
-        if (dataCounter * stepMSecond <= oneOOKwidth) {
-          // 1 bit detected, need to add to a package
-          packageData.push("1");
-        } else {
-          // 0 detected, need to add to a package
-          packageData.push("0");
-        }
-      } else {
-        // we are still detecting a pulse, need to count the puse
-        dataCounter++;
-      }
-    } else if (currentState === 2) {
-      // gap detected, can continue gap, end transmission or detect new signal
-      if (responses[i] < triggerLevel) {
-        // no data received
-        if (gapCounter * stepMSecond > maxGap) {
-          // max gap exceeded with no new signal, end of transmission
-          currentState = 0;
-          pulsePackages.push(packageData);
-        } else {
-          // still in gap period
-          gapCounter++;
-        }
-      } else {
-        // we detected a new pulse
-        currentState = 1;
-        dataCounter = 0;
-      }
-    } else {
-      console.warn("Unknown state, decoding logic is broken")
-      break
-    }
-  }
-
-  console.log("Found unfinished package in state: ", currentState, ", data: ", packageData)
-
-  return pulsePackages;
-};
-
-const decodePulseGroups = (pulsePackages) => {
-  const responses = [];
-  // remove leading zero from package
-  for (let i=0; i< pulsePackages.length; i++) {
-    // simple pre-abmle for GateTX type of a message (in Flipper nomenclature)
-    pulsePackages[i].shift();
-
-    const decimalOutput = parseInt(pulsePackages[i].join(""), 2);
-    const hexOutput = decimalOutput.toString(16).toUpperCase();
-    responses.push(hexOutput);
-  }
-  return responses;
-};
-
 function Decoder() {
   const [portState, setPort] = useState(undefined);
   const [frequency, setFrequency] = useState(433900);
@@ -183,6 +100,7 @@ function Decoder() {
   const [decodedItems, setDecodedItems] = useState([]);
 
   const filters = [tinySAUltra];
+  const ismDemodulator = new IsmDemodulator();
 
   const readData = async () => {
     let responseBuffer = [];
@@ -221,19 +139,15 @@ function Decoder() {
                   setPowerLevels(responses);
                   setXPoints(respXPoints);
 
-                  let pulsePackages = detectPulses(responses, stepMSecond, triggerLevel);
-                  let decodedMessages = decodePulseGroups(pulsePackages);
-
-                  console.log(decodedMessages)
-
+                  let decodedMessages = ismDemodulator.detectPulses(Protocol.GateTX24, responses, stepMSecond, triggerLevel);
+console.log(decodedMessages)
                   setDecodedItems(prevDecodedItems => {
-                    return [{
-                    data: decodedMessages,
-                    time: new Date().toISOString(),
+                    return [...decodedMessages.map(msg=>{ return {
+                    data: msg,
                     frequency: formatFrequency(frequency*frequencyMag),
                     sweeptime: sweeptime + (sweeptimeUnit === "" ? " s" : " ms"),
                     triggerLevel: triggerLevel + " dBm"
-                  }, ...prevDecodedItems];
+                  }}), ...prevDecodedItems];
                 });
 
                   // decoding logic completed, can arm trigger for more data
@@ -435,13 +349,13 @@ return (
       <TableBody>
         {decodedItems.map((row) => (
           <TableRow
-            key={row.time}
+            key={row.data.time.toISOString()}
             sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
           >
             <TableCell component="th" scope="row">
-              {row.data}
+              {row.data.decoded}
             </TableCell>
-            <TableCell align="right">{row.time}</TableCell>
+            <TableCell align="right">{row.data.time.toISOString()}</TableCell>
             <TableCell align="right">{row.frequency}</TableCell>
             <TableCell align="right">{row.sweeptime}</TableCell>
             <TableCell align="right">{row.triggerLevel}</TableCell>

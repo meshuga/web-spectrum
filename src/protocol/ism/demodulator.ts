@@ -60,7 +60,7 @@ export class Demodulator {
         onMsg(k);
     }
 
-    computeMagnitudeVector = function (data, size) {
+    private computeMagnitudeVector = function (data, size) {
         for (let j = 0; j < size; j += 2) {
             let i = data[j] - 127;
             let q = data[j + 1] - 127;

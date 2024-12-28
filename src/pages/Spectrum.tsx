@@ -103,7 +103,7 @@ function Spectrum() {
   const [startFrequencyMag, setStartFrequencyMag] = useState(1000000);
   const [stopFrequency, setStopFrequency] =   useState(108);
   const [stopFrequencyMag, setStopFrequencyMag] =   useState(1000000);
-  const [points, setPoints] = useState(500);
+  const [points, setPoints] = useState(450);
   const [powerLevels, setPowerLevels] = useState([]);
   const [powerPoints, setPowerPoints] = useState<Array<Array<Number>>>([]);
 
@@ -323,7 +323,7 @@ return (
       <Label>Points</Label>
       <NumberInput
         min={3}
-        max={500}
+        max={450}
         disabled={portState !== undefined}
         aria-label="Points"
         placeholder="Type a number…"
