@@ -32,9 +32,11 @@ Data decode sets a trigger and upon detection of a signal, the device captures i
 The current implementation is able to decode 1 message at a given time of size around 24 bits.
 
 ### RTL-SDR
-![decode](rtl-sdr-ads-b.jpg)
+![decode1](rtl-sdr-ads-b.jpg)
+![decode2](rtl-sdr-ism.png)
 
-The current implementation decodes ADS-B signals.
+The current implementation decodes ADS-B signals as well following ISM protocols:
+* GateTX
 
 ## References
 
