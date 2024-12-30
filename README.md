@@ -43,6 +43,7 @@ The current implementation decodes ADS-B signals as well following ISM protocols
 YT videos with explanations and tests:
 * [Web (r)evolution in lab electronics? Building a Web Spectrum Analyzer for TinySA Ultra](https://www.youtube.com/watch?v=XeK0TL0F8DI)
 * [Signal decoding with TinySA Ultra](https://www.youtube.com/watch?v=bqgmftWSKPc)
+* [RTL-SDR signal decoding in a web application](https://www.youtube.com/watch?v=Wm7sMXXT5Xs)
 
 ## Development
 
