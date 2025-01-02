@@ -14,6 +14,7 @@
 
 import { Demodulator as AdsBDemodulator } from '../protocol/ads-b/demodulator.js'
 import { Demodulator as IsmDemodulator } from '../protocol/ism/demodulator.ts'
+import { Protocol } from '../protocol/protocol.ts'
 
 /** Interface for classes that get samples from a Radio class. */
 export interface SampleReceiver {
@@ -68,10 +69,10 @@ class ReceiverSequence implements SampleReceiver {
 export class LoggingReceiver implements SampleReceiver {
   private adsBDemodulator: AdsBDemodulator;
   private ismDemodulator: IsmDemodulator;
-  private protocol: string;
+  private protocol: Protocol;
   private onMsg;
 
-  constructor(protocol: string, onMsg) {
+  constructor(protocol: Protocol, onMsg) {
     this.protocol = protocol;
     this.onMsg = onMsg;
     this.adsBDemodulator = new AdsBDemodulator();
@@ -87,7 +88,7 @@ export class LoggingReceiver implements SampleReceiver {
     console.log("got samples", samples.length);
 
 
-    if (this.protocol === "adsb") {
+    if (this.protocol === Protocol.ADSB) {
       // for now we only have ADS-B demodulation
       this.adsBDemodulator.process(samples, 256000, (msg) => {
         console.log(msg);
@@ -106,11 +107,6 @@ export class LoggingReceiver implements SampleReceiver {
     } else {
       this.ismDemodulator.process(samples, 256000, (msg) => {
         this.onMsg(msg);
-        // this.onMsg({
-        //   time: new Date(),
-        //   msg: msg.msg,
-        //   decoded: JSON.stringify(nonEmptyFields)
-        // });
       });
     }
   }

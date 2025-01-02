@@ -206,7 +206,7 @@ return (
             key={index}
             sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
           >
-            <TableCell width='60%' sx={{'fontSize': 11, wordBreak: 'break-all'}} component="th" scope="row">
+            <TableCell width='60%' sx={{'fontSize': 12, wordBreak: 'break-all'}} component="th" scope="row">
               {row.decoded}
             </TableCell>
             <TableCell width='20%' component="th" scope="row">
